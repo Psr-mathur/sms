@@ -1,0 +1,169 @@
+import { Link, useLocation } from "wouter";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  TrendingUp,
+  Users,
+  Truck,
+  BarChart3,
+  RefreshCw,
+  Wifi,
+  WifiOff,
+} from "lucide-react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { runSync, getLastSync } from "@/lib/syncService";
+import { cn } from "@/lib/utils";
+
+const navItems = [
+  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/items", label: "Items", icon: Package },
+  { href: "/purchases", label: "Purchases", icon: ShoppingCart },
+  { href: "/sales", label: "Sales", icon: TrendingUp },
+  { href: "/suppliers", label: "Suppliers", icon: Truck },
+  { href: "/customers", label: "Customers", icon: Users },
+  { href: "/reports", label: "Reports", icon: BarChart3 },
+];
+
+function SyncButton() {
+  const [syncing, setSyncing] = useState(false);
+  const [online, setOnline] = useState(navigator.onLine);
+  const [lastSync, setLastSyncState] = useState<string | null>(getLastSync());
+
+  useEffect(() => {
+    const handleOnline = () => setOnline(true);
+    const handleOffline = () => setOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  async function handleSync() {
+    if (!online || syncing) return;
+    setSyncing(true);
+    try {
+      const result = await runSync();
+      setLastSyncState(new Date().toISOString());
+      toast.success(`Sync complete — ${result.pushed} pushed, ${result.pulled} pulled`);
+    } catch (e) {
+      toast.error((e as Error).message ?? "Sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  const lastSyncLabel = lastSync
+    ? new Date(lastSync).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : "Never";
+
+  return (
+    <button
+      onClick={handleSync}
+      disabled={!online || syncing}
+      className={cn(
+        "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+        "border border-sidebar-border",
+        online
+          ? "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          : "text-sidebar-foreground/40 cursor-not-allowed"
+      )}
+      title={online ? `Last sync: ${lastSyncLabel}` : "Offline"}
+    >
+      {online ? (
+        <Wifi className="h-3.5 w-3.5 text-emerald-400" />
+      ) : (
+        <WifiOff className="h-3.5 w-3.5 text-red-400" />
+      )}
+      <RefreshCw className={cn("h-3.5 w-3.5", syncing && "animate-spin")} />
+      <span className="hidden lg:inline">{syncing ? "Syncing..." : "Sync"}</span>
+    </button>
+  );
+}
+
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+export default function Layout({ children }: LayoutProps) {
+  const [location] = useLocation();
+
+  return (
+    <div className="flex min-h-screen bg-background">
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex flex-col w-56 bg-sidebar text-sidebar-foreground border-r border-sidebar-border shrink-0">
+        <div className="flex items-center gap-2 px-4 py-4 border-b border-sidebar-border">
+          <Package className="h-5 w-5 text-amber-400" />
+          <span className="font-bold text-base tracking-tight">Stock Manager</span>
+        </div>
+
+        <nav className="flex-1 px-2 py-3 space-y-0.5">
+          {navItems.map(({ href, label, icon: Icon }) => {
+            const active = location === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  active
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="px-3 py-3 border-t border-sidebar-border">
+          <SyncButton />
+        </div>
+      </aside>
+
+      {/* Main area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile top bar */}
+        <header className="md:hidden flex items-center justify-between px-4 py-3 bg-sidebar text-sidebar-foreground border-b border-sidebar-border">
+          <div className="flex items-center gap-2">
+            <Package className="h-4 w-4 text-amber-400" />
+            <span className="font-bold text-sm">Stock Manager</span>
+          </div>
+          <SyncButton />
+        </header>
+
+        {/* Page content */}
+        <main className="flex-1 overflow-auto pb-20 md:pb-0">
+          {children}
+        </main>
+
+        {/* Mobile bottom nav */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border z-50">
+          <div className="flex overflow-x-auto scrollbar-none">
+            {navItems.map(({ href, label, icon: Icon }) => {
+              const active = location === href;
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={cn(
+                    "flex-shrink-0 flex flex-col items-center gap-0.5 py-2 px-3 text-xs font-medium transition-colors",
+                    active ? "text-amber-400" : "text-sidebar-foreground/50"
+                  )}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span className="text-[10px]">{label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      </div>
+    </div>
+  );
+}
