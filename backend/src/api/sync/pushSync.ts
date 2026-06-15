@@ -19,7 +19,17 @@ export async function pushSync(req: Request, res: Response) {
       where: { name: item.name },
     });
 
-    if (!existing) {
+    if (existing) {
+      await prisma.item.update({
+        where: { id: existing.id },
+        data: {
+          description: item.description ?? null,
+          quantity: qty,
+          status: computeStatus(qty, threshold),
+          lowStockThreshold: threshold,
+        },
+      });
+    } else {
       await prisma.item.create({
         data: {
           name: item.name,
@@ -39,7 +49,17 @@ export async function pushSync(req: Request, res: Response) {
     const existing = await prisma.supplier.findFirst({
       where: { name: supplier.name },
     });
-    if (!existing) {
+    if (existing) {
+      await prisma.supplier.update({
+        where: { id: existing.id },
+        data: {
+          contactName: supplier.contactName ?? null,
+          phone: supplier.phone ?? null,
+          email: supplier.email ?? null,
+          address: supplier.address ?? null,
+        },
+      });
+    } else {
       await prisma.supplier.create({
         data: {
           name: supplier.name,
@@ -58,7 +78,17 @@ export async function pushSync(req: Request, res: Response) {
     const existing = await prisma.customer.findFirst({
       where: { name: customer.name },
     });
-    if (!existing) {
+    if (existing) {
+      await prisma.customer.update({
+        where: { id: existing.id },
+        data: {
+          contactName: customer.contactName ?? null,
+          phone: customer.phone ?? null,
+          email: customer.email ?? null,
+          address: customer.address ?? null,
+        },
+      });
+    } else {
       await prisma.customer.create({
         data: {
           name: customer.name,

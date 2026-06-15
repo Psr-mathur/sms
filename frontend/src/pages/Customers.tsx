@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { db, type LocalCustomer } from "@/lib/db";
-import { Plus, Pencil, Trash2, X, Search, Users } from "lucide-react";
+import { Plus, Pencil, X, Search, Users } from "lucide-react";
 import { toast } from "sonner";
 
 const schema = z.object({
@@ -93,11 +93,7 @@ export default function Customers() {
     return search ? all.filter((c) => c.name.toLowerCase().includes(search.toLowerCase())) : all;
   }, [search]);
 
-  async function deleteCustomer(c: LocalCustomer) {
-    if (!confirm(`Delete customer "${c.name}"?`)) return;
-    await db.customers.delete(c.localId!);
-    toast.success("Customer deleted");
-  }
+
 
   return (
     <div className="p-4 md:p-6 space-y-4">
@@ -143,7 +139,6 @@ export default function Customers() {
                 </div>
                 <div className="flex gap-1 shrink-0">
                   <button onClick={() => { setEditing(c); setShowForm(true); }} className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"><Pencil className="h-3.5 w-3.5" /></button>
-                  <button onClick={() => deleteCustomer(c)} className="p-1.5 rounded hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                 </div>
               </div>
             ))}

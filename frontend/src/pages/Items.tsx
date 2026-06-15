@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { db, type LocalItem, type ItemStatus } from "@/lib/db";
 import StatusBadge from "@/components/StatusBadge";
-import { Plus, Pencil, Trash2, X, Search } from "lucide-react";
+import { Plus, Pencil, X, Search } from "lucide-react";
 import { toast } from "sonner";
 
 const schema = z.object({
@@ -107,11 +107,7 @@ export default function Items() {
       .filter((i) => !search || i.name.toLowerCase().includes(search.toLowerCase()));
   }, [search, statusFilter]);
 
-  async function deleteItem(item: LocalItem) {
-    if (!confirm(`Delete "${item.name}"?`)) return;
-    await db.items.delete(item.localId!);
-    toast.success("Item deleted");
-  }
+
 
   return (
     <div className="p-4 md:p-6 space-y-4">
@@ -179,7 +175,6 @@ export default function Items() {
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1">
                         <button onClick={() => { setEditing(item); setShowForm(true); }} className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"><Pencil className="h-3.5 w-3.5" /></button>
-                        <button onClick={() => deleteItem(item)} className="p-1.5 rounded hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                       </div>
                     </td>
                   </tr>

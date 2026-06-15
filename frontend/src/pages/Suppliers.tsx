@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { db, type LocalSupplier } from "@/lib/db";
-import { Plus, Pencil, Trash2, X, Search, Truck } from "lucide-react";
+import { Plus, Pencil, X, Search, Truck } from "lucide-react";
 import { toast } from "sonner";
 
 const schema = z.object({
@@ -93,11 +93,7 @@ export default function Suppliers() {
     return search ? all.filter((s) => s.name.toLowerCase().includes(search.toLowerCase())) : all;
   }, [search]);
 
-  async function deleteSupplier(s: LocalSupplier) {
-    if (!confirm(`Delete supplier "${s.name}"?`)) return;
-    await db.suppliers.delete(s.localId!);
-    toast.success("Supplier deleted");
-  }
+
 
   return (
     <div className="p-4 md:p-6 space-y-4">
@@ -143,7 +139,6 @@ export default function Suppliers() {
                 </div>
                 <div className="flex gap-1 shrink-0">
                   <button onClick={() => { setEditing(s); setShowForm(true); }} className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"><Pencil className="h-3.5 w-3.5" /></button>
-                  <button onClick={() => deleteSupplier(s)} className="p-1.5 rounded hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                 </div>
               </div>
             ))}

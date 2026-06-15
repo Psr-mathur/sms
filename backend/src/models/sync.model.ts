@@ -59,7 +59,7 @@ export const SyncPushResponse = zod.object({
  * @summary Pull server changes since last sync
  */
 export const SyncPullQueryParams = zod.object({
-  "since": zod.date().optional()
+  "since": zod.string().optional()
 })
 
 export const SyncPullResponse = zod.object({

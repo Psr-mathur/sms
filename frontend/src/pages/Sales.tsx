@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { db, type LocalSale } from "@/lib/db";
-import { Plus, Trash2, X, Search, TrendingUp, Filter } from "lucide-react";
+import { Plus, X, Search, TrendingUp, Filter } from "lucide-react";
 import { toast } from "sonner";
 
 const schema = z.object({
@@ -132,20 +132,7 @@ export default function Sales() {
     return all;
   }, [search, dateFrom, dateTo]);
 
-  async function deleteSale(s: LocalSale) {
-    if (!confirm(`Delete this sale of ${s.quantity} ${s.itemName}?`)) return;
-    const item = await db.items.where("localId").equals(s.itemId).first();
-    if (item) {
-      const newQty = item.quantity + s.quantity;
-      await db.items.update(item.localId!, {
-        quantity: newQty,
-        status: newQty <= 0 ? "out_of_stock" : newQty <= item.lowStockThreshold ? "low_stock" : "in_stock",
-        updatedAt: new Date().toISOString(),
-      });
-    }
-    await db.sales.delete(s.localId!);
-    toast.success("Sale deleted");
-  }
+
 
   return (
     <div className="p-4 md:p-6 space-y-4">
@@ -204,7 +191,6 @@ export default function Sales() {
                     <td className="px-4 py-3 text-right tabular-nums font-medium">{s.quantity}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{s.notes ?? ""}</td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => deleteSale(s)} className="p-1.5 rounded hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                     </td>
                   </tr>
                 ))}
