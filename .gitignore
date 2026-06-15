@@ -74,3 +74,5 @@ test-results/
 # Local Android SDK (will be automatically deleted on repo deletion)
 android-sdk/
 
+# AdminJS cache/bundler outputs
+.adminjs/
