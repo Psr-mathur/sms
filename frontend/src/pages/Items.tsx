@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { db, type LocalItem, type ItemStatus } from "@/lib/db";
+import { itemsApi, type Item, type ItemStatus } from "@/lib/db";
+import { queryKeys } from "@/lib/queryKeys";
 import StatusBadge from "@/components/StatusBadge";
-import { Plus, Pencil, X, Search } from "lucide-react";
+import { Plus, Pencil, X, Search, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { AxiosError } from "axios";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -15,13 +17,9 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
-function computeStatus(quantity: number, threshold: number): ItemStatus {
-  if (quantity <= 0) return "out_of_stock";
-  if (quantity <= threshold) return "low_stock";
-  return "in_stock";
-}
+function ItemForm({ item, onClose }: { item?: Item; onClose: () => void }) {
+  const queryClient = useQueryClient();
 
-function ItemForm({ item, onClose }: { item?: LocalItem; onClose: () => void }) {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -31,19 +29,49 @@ function ItemForm({ item, onClose }: { item?: LocalItem; onClose: () => void }) 
     },
   });
 
-  async function onSubmit(data: FormData) {
-    const currentQty = item?.quantity ?? 0;
-    const status = computeStatus(currentQty, data.lowStockThreshold);
-    const now = new Date().toISOString();
-    if (item?.localId) {
-      await db.items.update(item.localId, { ...data, status, updatedAt: now });
-      toast.success("Item updated");
-    } else {
-      await db.items.add({ ...data, quantity: 0, status, createdAt: now, updatedAt: now });
+  const createMutation = useMutation({
+    mutationFn: (data: FormData) =>
+      itemsApi.create({
+        name: data.name,
+        description: data.description || undefined,
+        lowStockThreshold: data.lowStockThreshold,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.items.all() });
       toast.success("Item added");
+      onClose();
+    },
+    onError: (err: AxiosError<{ error: string }>) => {
+      toast.error(err.response?.data?.error ?? "Failed to add item");
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (data: FormData) =>
+      itemsApi.update(item!.id, {
+        name: data.name,
+        description: data.description,
+        lowStockThreshold: data.lowStockThreshold,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.items.all() });
+      toast.success("Item updated");
+      onClose();
+    },
+    onError: (err: AxiosError<{ error: string }>) => {
+      toast.error(err.response?.data?.error ?? "Failed to update item");
+    },
+  });
+
+  function onSubmit(data: FormData) {
+    if (item) {
+      updateMutation.mutate(data);
+    } else {
+      createMutation.mutate(data);
     }
-    onClose();
   }
+
+  const isBusy = createMutation.isPending || updateMutation.isPending || isSubmitting;
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -70,8 +98,8 @@ function ItemForm({ item, onClose }: { item?: LocalItem; onClose: () => void }) 
           <p className="text-xs text-muted-foreground">Alert when quantity falls at or below the threshold</p>
           <div className="flex gap-2 pt-2">
             <button type="button" onClick={onClose} className="flex-1 border border-border rounded-md py-2 text-sm font-medium hover:bg-muted/50 transition-colors">Cancel</button>
-            <button type="submit" disabled={isSubmitting} className="flex-1 bg-primary text-primary-foreground rounded-md py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
-              {isSubmitting ? "Saving..." : item ? "Save Changes" : "Add Item"}
+            <button type="submit" disabled={isBusy} className="flex-1 bg-primary text-primary-foreground rounded-md py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
+              {isBusy ? "Saving..." : item ? "Save Changes" : "Add Item"}
             </button>
           </div>
         </form>
@@ -89,18 +117,21 @@ const statusFilters: { value: "all" | ItemStatus; label: string }[] = [
 
 export default function Items() {
   const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState<LocalItem | undefined>();
+  const [editing, setEditing] = useState<Item | undefined>();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | ItemStatus>("all");
 
-  const items = useLiveQuery(async () => {
-    const all = await db.items.orderBy("name").toArray();
-    return all
-      .filter((i) => statusFilter === "all" || i.status === statusFilter)
-      .filter((i) => !search || i.name.toLowerCase().includes(search.toLowerCase()));
-  }, [search, statusFilter]);
-
-
+  const { data: items, isLoading, isError } = useQuery({
+    queryKey: queryKeys.items.list({
+      search: search || undefined,
+      status: statusFilter !== "all" ? statusFilter : undefined,
+    }),
+    queryFn: () =>
+      itemsApi.list({
+        search: search || undefined,
+        status: statusFilter !== "all" ? statusFilter : undefined,
+      }),
+  });
 
   return (
     <div className="p-4 md:p-6 space-y-4">
@@ -139,7 +170,15 @@ export default function Items() {
       </div>
 
       <div className="bg-card border border-card-border rounded-lg overflow-hidden">
-        {!items || items.length === 0 ? (
+        {isLoading ? (
+          <div className="py-12 flex justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : isError ? (
+          <div className="py-12 text-center">
+            <p className="text-destructive text-sm">Failed to load items. Check your connection.</p>
+          </div>
+        ) : !items || items.length === 0 ? (
           <div className="py-12 text-center">
             <p className="text-muted-foreground text-sm">No items found.</p>
           </div>
@@ -157,7 +196,7 @@ export default function Items() {
               </thead>
               <tbody className="divide-y divide-border">
                 {items.map((item) => (
-                  <tr key={item.localId} className="hover:bg-muted/20 transition-colors">
+                  <tr key={item.id} className="hover:bg-muted/20 transition-colors">
                     <td className="px-4 py-3">
                       <p className="font-medium">{item.name}</p>
                       {item.description && <p className="text-xs text-muted-foreground">{item.description}</p>}

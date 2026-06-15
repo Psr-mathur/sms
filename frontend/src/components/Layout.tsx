@@ -7,14 +7,11 @@ import {
   Users,
   Truck,
   BarChart3,
-  RefreshCw,
   Wifi,
   WifiOff,
   LogOut,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { runSync, getLastSync } from "@/lib/syncService";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -28,10 +25,8 @@ const navItems = [
   { href: "/reports", label: "Reports", icon: BarChart3 },
 ];
 
-function SyncButton() {
-  const [syncing, setSyncing] = useState(false);
+function OnlineIndicator() {
   const [online, setOnline] = useState(navigator.onLine);
-  const [lastSync, setLastSyncState] = useState<string | null>(getLastSync());
 
   useEffect(() => {
     const handleOnline = () => setOnline(true);
@@ -44,45 +39,23 @@ function SyncButton() {
     };
   }, []);
 
-  async function handleSync() {
-    if (!online || syncing) return;
-    setSyncing(true);
-    try {
-      const result = await runSync();
-      setLastSyncState(new Date().toISOString());
-      toast.success(`Sync complete — ${result.pushed} pushed, ${result.pulled} pulled`);
-    } catch (e) {
-      toast.error((e as Error).message ?? "Sync failed");
-    } finally {
-      setSyncing(false);
-    }
-  }
-
-  const lastSyncLabel = lastSync
-    ? new Date(lastSync).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    : "Never";
-
   return (
-    <button
-      onClick={handleSync}
-      disabled={!online || syncing}
+    <div
       className={cn(
-        "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
-        "border border-sidebar-border",
+        "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-sidebar-border",
         online
-          ? "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          : "text-sidebar-foreground/40 cursor-not-allowed"
+          ? "text-emerald-400"
+          : "text-red-400"
       )}
-      title={online ? `Last sync: ${lastSyncLabel}` : "Offline"}
+      title={online ? "Connected — all data is live" : "Offline — no connection"}
     >
       {online ? (
-        <Wifi className="h-3.5 w-3.5 text-emerald-400" />
+        <Wifi className="h-3.5 w-3.5" />
       ) : (
-        <WifiOff className="h-3.5 w-3.5 text-red-400" />
+        <WifiOff className="h-3.5 w-3.5" />
       )}
-      <RefreshCw className={cn("h-3.5 w-3.5", syncing && "animate-spin")} />
-      <span className="hidden lg:inline">{syncing ? "Syncing..." : "Sync"}</span>
-    </button>
+      <span className="hidden lg:inline">{online ? "Live" : "Offline"}</span>
+    </div>
   );
 }
 
@@ -125,7 +98,7 @@ export default function Layout({ children }: LayoutProps) {
         </nav>
 
         <div className="px-3 py-3 border-t border-sidebar-border space-y-2.5">
-          <SyncButton />
+          <OnlineIndicator />
           <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-sidebar-accent/40 text-sidebar-foreground">
             <div className="min-w-0">
               <p className="text-xs font-semibold truncate leading-tight">{user?.name}</p>
@@ -151,7 +124,7 @@ export default function Layout({ children }: LayoutProps) {
             <span className="font-bold text-sm">Stock Manager</span>
           </div>
           <div className="flex items-center gap-3">
-            <SyncButton />
+            <OnlineIndicator />
             <button
               onClick={logout}
               className="p-1 hover:bg-sidebar-accent rounded text-sidebar-foreground/75 hover:text-red-400 transition-colors"

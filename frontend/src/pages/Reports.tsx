@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "@/lib/db";
-import { Printer } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { purchasesApi, salesApi } from "@/lib/db";
+import { queryKeys } from "@/lib/queryKeys";
+import { Printer, Loader2 } from "lucide-react";
 
 function PrintButton({ label }: { label: string }) {
   return (
@@ -19,11 +20,19 @@ function PrintButton({ label }: { label: string }) {
 function DailyReport() {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
-  const purchases = useLiveQuery(() => db.purchases.where("date").equals(date).toArray(), [date]);
-  const sales = useLiveQuery(() => db.sales.where("date").equals(date).toArray(), [date]);
+  const { data: purchases, isLoading: loadingP } = useQuery({
+    queryKey: queryKeys.purchases.list({ dateFrom: date, dateTo: date }),
+    queryFn: () => purchasesApi.list({ dateFrom: date, dateTo: date }),
+  });
+
+  const { data: sales, isLoading: loadingS } = useQuery({
+    queryKey: queryKeys.sales.list({ dateFrom: date, dateTo: date }),
+    queryFn: () => salesApi.list({ dateFrom: date, dateTo: date }),
+  });
 
   const purchaseQty = purchases?.reduce((s, p) => s + p.quantity, 0) ?? 0;
   const saleQty = sales?.reduce((s, sale) => s + sale.quantity, 0) ?? 0;
+  const isLoading = loadingP || loadingS;
 
   return (
     <div className="space-y-4">
@@ -35,56 +44,62 @@ function DailyReport() {
         <PrintButton label="Print Daily Report" />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <div className="bg-card border border-card-border rounded-lg p-4">
-          <p className="text-xs text-muted-foreground mb-1">Purchases</p>
-          <p className="text-2xl font-bold">{purchases?.length ?? 0}</p>
-          <p className="text-sm text-muted-foreground">{purchaseQty} units in</p>
-        </div>
-        <div className="bg-card border border-card-border rounded-lg p-4">
-          <p className="text-xs text-muted-foreground mb-1">Sales</p>
-          <p className="text-2xl font-bold text-emerald-600">{sales?.length ?? 0}</p>
-          <p className="text-sm text-muted-foreground">{saleQty} units out</p>
-        </div>
-        <div className="bg-card border border-card-border rounded-lg p-4">
-          <p className="text-xs text-muted-foreground mb-1">Net Qty</p>
-          <p className={`text-2xl font-bold ${purchaseQty - saleQty >= 0 ? "text-foreground" : "text-red-500"}`}>{purchaseQty - saleQty}</p>
-          <p className="text-sm text-muted-foreground">in minus out</p>
-        </div>
-      </div>
+      {isLoading ? (
+        <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="bg-card border border-card-border rounded-lg p-4">
+              <p className="text-xs text-muted-foreground mb-1">Purchases</p>
+              <p className="text-2xl font-bold">{purchases?.length ?? 0}</p>
+              <p className="text-sm text-muted-foreground">{purchaseQty} units in</p>
+            </div>
+            <div className="bg-card border border-card-border rounded-lg p-4">
+              <p className="text-xs text-muted-foreground mb-1">Sales</p>
+              <p className="text-2xl font-bold text-emerald-600">{sales?.length ?? 0}</p>
+              <p className="text-sm text-muted-foreground">{saleQty} units out</p>
+            </div>
+            <div className="bg-card border border-card-border rounded-lg p-4">
+              <p className="text-xs text-muted-foreground mb-1">Net Qty</p>
+              <p className={`text-2xl font-bold ${purchaseQty - saleQty >= 0 ? "text-foreground" : "text-red-500"}`}>{purchaseQty - saleQty}</p>
+              <p className="text-sm text-muted-foreground">in minus out</p>
+            </div>
+          </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-card border border-card-border rounded-lg">
-          <div className="px-4 py-3 border-b border-card-border font-semibold text-sm">Purchases on {date}</div>
-          {!purchases?.length ? (
-            <p className="px-4 py-6 text-sm text-muted-foreground text-center">No purchases on this date</p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead><tr className="border-b border-border bg-muted/30"><th className="px-4 py-2 text-left text-xs text-muted-foreground">Item</th><th className="px-4 py-2 text-left text-xs text-muted-foreground">Supplier</th><th className="px-4 py-2 text-right text-xs text-muted-foreground">Qty</th></tr></thead>
-              <tbody className="divide-y divide-border">
-                {purchases.map((p) => (
-                  <tr key={p.localId}><td className="px-4 py-2.5 font-medium">{p.itemName}</td><td className="px-4 py-2.5 text-muted-foreground">{p.supplierName}</td><td className="px-4 py-2.5 text-right tabular-nums">{p.quantity}</td></tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-        <div className="bg-card border border-card-border rounded-lg">
-          <div className="px-4 py-3 border-b border-card-border font-semibold text-sm">Sales on {date}</div>
-          {!sales?.length ? (
-            <p className="px-4 py-6 text-sm text-muted-foreground text-center">No sales on this date</p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead><tr className="border-b border-border bg-muted/30"><th className="px-4 py-2 text-left text-xs text-muted-foreground">Item</th><th className="px-4 py-2 text-left text-xs text-muted-foreground">Customer</th><th className="px-4 py-2 text-right text-xs text-muted-foreground">Qty</th></tr></thead>
-              <tbody className="divide-y divide-border">
-                {sales.map((s) => (
-                  <tr key={s.localId}><td className="px-4 py-2.5 font-medium">{s.itemName}</td><td className="px-4 py-2.5 text-muted-foreground">{s.customerName}</td><td className="px-4 py-2.5 text-right tabular-nums">{s.quantity}</td></tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="bg-card border border-card-border rounded-lg">
+              <div className="px-4 py-3 border-b border-card-border font-semibold text-sm">Purchases on {date}</div>
+              {!purchases?.length ? (
+                <p className="px-4 py-6 text-sm text-muted-foreground text-center">No purchases on this date</p>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead><tr className="border-b border-border bg-muted/30"><th className="px-4 py-2 text-left text-xs text-muted-foreground">Item</th><th className="px-4 py-2 text-left text-xs text-muted-foreground">Supplier</th><th className="px-4 py-2 text-right text-xs text-muted-foreground">Qty</th></tr></thead>
+                  <tbody className="divide-y divide-border">
+                    {purchases.map((p) => (
+                      <tr key={p.id}><td className="px-4 py-2.5 font-medium">{p.itemName}</td><td className="px-4 py-2.5 text-muted-foreground">{p.supplierName}</td><td className="px-4 py-2.5 text-right tabular-nums">{p.quantity}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+            <div className="bg-card border border-card-border rounded-lg">
+              <div className="px-4 py-3 border-b border-card-border font-semibold text-sm">Sales on {date}</div>
+              {!sales?.length ? (
+                <p className="px-4 py-6 text-sm text-muted-foreground text-center">No sales on this date</p>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead><tr className="border-b border-border bg-muted/30"><th className="px-4 py-2 text-left text-xs text-muted-foreground">Item</th><th className="px-4 py-2 text-left text-xs text-muted-foreground">Customer</th><th className="px-4 py-2 text-right text-xs text-muted-foreground">Qty</th></tr></thead>
+                  <tbody className="divide-y divide-border">
+                    {sales.map((s) => (
+                      <tr key={s.id}><td className="px-4 py-2.5 font-medium">{s.itemName}</td><td className="px-4 py-2.5 text-muted-foreground">{s.customerName}</td><td className="px-4 py-2.5 text-right tabular-nums">{s.quantity}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -99,9 +114,17 @@ function MonthlyReport() {
   const lastDay = new Date(year, month, 0).getDate();
   const dateTo = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
 
-  const purchases = useLiveQuery(() => db.purchases.where("date").between(dateFrom, dateTo, true, true).toArray(), [dateFrom, dateTo]);
-  const sales = useLiveQuery(() => db.sales.where("date").between(dateFrom, dateTo, true, true).toArray(), [dateFrom, dateTo]);
+  const { data: purchases, isLoading: loadingP } = useQuery({
+    queryKey: queryKeys.purchases.list({ dateFrom, dateTo }),
+    queryFn: () => purchasesApi.list({ dateFrom, dateTo }),
+  });
 
+  const { data: sales, isLoading: loadingS } = useQuery({
+    queryKey: queryKeys.sales.list({ dateFrom, dateTo }),
+    queryFn: () => salesApi.list({ dateFrom, dateTo }),
+  });
+
+  const isLoading = loadingP || loadingS;
   const purchaseQty = purchases?.reduce((s, p) => s + p.quantity, 0) ?? 0;
   const saleQty = sales?.reduce((s, sale) => s + sale.quantity, 0) ?? 0;
 
@@ -134,42 +157,48 @@ function MonthlyReport() {
         <PrintButton label="Print Monthly Report" />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <div className="bg-card border border-card-border rounded-lg p-4">
-          <p className="text-xs text-muted-foreground mb-1">Total In (Purchases)</p>
-          <p className="text-2xl font-bold">{purchases?.length ?? 0}</p>
-          <p className="text-sm text-muted-foreground">{purchaseQty} units</p>
-        </div>
-        <div className="bg-card border border-card-border rounded-lg p-4">
-          <p className="text-xs text-muted-foreground mb-1">Total Out (Sales)</p>
-          <p className="text-2xl font-bold text-emerald-600">{sales?.length ?? 0}</p>
-          <p className="text-sm text-muted-foreground">{saleQty} units</p>
-        </div>
-        <div className="bg-card border border-card-border rounded-lg p-4">
-          <p className="text-xs text-muted-foreground mb-1">Net Qty</p>
-          <p className={`text-2xl font-bold ${purchaseQty - saleQty >= 0 ? "text-foreground" : "text-red-500"}`}>{purchaseQty - saleQty}</p>
-        </div>
-      </div>
-
-      {breakdown.length > 0 && (
-        <div className="bg-card border border-card-border rounded-lg overflow-hidden">
-          <div className="px-4 py-3 border-b border-card-border font-semibold text-sm">Day-by-Day Breakdown</div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead><tr className="border-b border-border bg-muted/30"><th className="px-4 py-2 text-left text-xs text-muted-foreground">Date</th><th className="px-4 py-2 text-right text-xs text-muted-foreground">In (Purchases)</th><th className="px-4 py-2 text-right text-xs text-muted-foreground">Out (Sales)</th><th className="px-4 py-2 text-right text-xs text-muted-foreground">Net</th></tr></thead>
-              <tbody className="divide-y divide-border">
-                {breakdown.map(([date, data]) => (
-                  <tr key={date} className="hover:bg-muted/20">
-                    <td className="px-4 py-2.5">{date}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums">{data.inQty}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-emerald-600">{data.outQty}</td>
-                    <td className={`px-4 py-2.5 text-right tabular-nums font-medium ${data.inQty - data.outQty >= 0 ? "" : "text-red-500"}`}>{data.inQty - data.outQty}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {isLoading ? (
+        <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="bg-card border border-card-border rounded-lg p-4">
+              <p className="text-xs text-muted-foreground mb-1">Total In (Purchases)</p>
+              <p className="text-2xl font-bold">{purchases?.length ?? 0}</p>
+              <p className="text-sm text-muted-foreground">{purchaseQty} units</p>
+            </div>
+            <div className="bg-card border border-card-border rounded-lg p-4">
+              <p className="text-xs text-muted-foreground mb-1">Total Out (Sales)</p>
+              <p className="text-2xl font-bold text-emerald-600">{sales?.length ?? 0}</p>
+              <p className="text-sm text-muted-foreground">{saleQty} units</p>
+            </div>
+            <div className="bg-card border border-card-border rounded-lg p-4">
+              <p className="text-xs text-muted-foreground mb-1">Net Qty</p>
+              <p className={`text-2xl font-bold ${purchaseQty - saleQty >= 0 ? "text-foreground" : "text-red-500"}`}>{purchaseQty - saleQty}</p>
+            </div>
           </div>
-        </div>
+
+          {breakdown.length > 0 && (
+            <div className="bg-card border border-card-border rounded-lg overflow-hidden">
+              <div className="px-4 py-3 border-b border-card-border font-semibold text-sm">Day-by-Day Breakdown</div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead><tr className="border-b border-border bg-muted/30"><th className="px-4 py-2 text-left text-xs text-muted-foreground">Date</th><th className="px-4 py-2 text-right text-xs text-muted-foreground">In (Purchases)</th><th className="px-4 py-2 text-right text-xs text-muted-foreground">Out (Sales)</th><th className="px-4 py-2 text-right text-xs text-muted-foreground">Net</th></tr></thead>
+                  <tbody className="divide-y divide-border">
+                    {breakdown.map(([date, data]) => (
+                      <tr key={date} className="hover:bg-muted/20">
+                        <td className="px-4 py-2.5">{date}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums">{data.inQty}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums text-emerald-600">{data.outQty}</td>
+                        <td className={`px-4 py-2.5 text-right tabular-nums font-medium ${data.inQty - data.outQty >= 0 ? "" : "text-red-500"}`}>{data.inQty - data.outQty}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -180,17 +209,21 @@ function ByCustomerReport() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  const data = useLiveQuery(async () => {
-    let all = await db.sales.toArray();
-    if (dateFrom) all = all.filter((s) => s.date >= dateFrom);
-    if (dateTo) all = all.filter((s) => s.date <= dateTo);
-    const map = new Map<number, { name: string; transactions: number; totalQty: number }>();
-    for (const s of all) {
-      const e = map.get(s.customerId) ?? { name: s.customerName, transactions: 0, totalQty: 0 };
-      map.set(s.customerId, { ...e, transactions: e.transactions + 1, totalQty: e.totalQty + s.quantity });
-    }
-    return [...map.values()].sort((a, b) => b.totalQty - a.totalQty);
-  }, [dateFrom, dateTo]);
+  const { data: sales, isLoading } = useQuery({
+    queryKey: queryKeys.sales.list({ dateFrom: dateFrom || undefined, dateTo: dateTo || undefined }),
+    queryFn: () => salesApi.list({ dateFrom: dateFrom || undefined, dateTo: dateTo || undefined }),
+  });
+
+  const customerData = sales
+    ? (() => {
+        const map = new Map<number, { name: string; transactions: number; totalQty: number }>();
+        for (const s of sales) {
+          const e = map.get(s.customerId) ?? { name: s.customerName, transactions: 0, totalQty: 0 };
+          map.set(s.customerId, { ...e, transactions: e.transactions + 1, totalQty: e.totalQty + s.quantity });
+        }
+        return [...map.values()].sort((a, b) => b.totalQty - a.totalQty);
+      })()
+    : null;
 
   return (
     <div className="space-y-4">
@@ -206,13 +239,15 @@ function ByCustomerReport() {
         <PrintButton label="Print Customer Report" />
       </div>
       <div className="bg-card border border-card-border rounded-lg overflow-hidden">
-        {!data?.length ? (
+        {isLoading ? (
+          <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+        ) : !customerData?.length ? (
           <p className="px-4 py-8 text-center text-sm text-muted-foreground">No sales data found.</p>
         ) : (
           <table className="w-full text-sm">
             <thead><tr className="border-b border-border bg-muted/30"><th className="px-4 py-2.5 text-left text-xs text-muted-foreground">Customer</th><th className="px-4 py-2.5 text-right text-xs text-muted-foreground">Transactions</th><th className="px-4 py-2.5 text-right text-xs text-muted-foreground">Total Qty</th></tr></thead>
             <tbody className="divide-y divide-border">
-              {data.map((c, i) => (
+              {customerData.map((c, i) => (
                 <tr key={i} className="hover:bg-muted/20">
                   <td className="px-4 py-3 font-medium">{c.name}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{c.transactions}</td>
@@ -232,17 +267,21 @@ function BySupplierReport() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  const data = useLiveQuery(async () => {
-    let all = await db.purchases.toArray();
-    if (dateFrom) all = all.filter((p) => p.date >= dateFrom);
-    if (dateTo) all = all.filter((p) => p.date <= dateTo);
-    const map = new Map<number, { name: string; transactions: number; totalQty: number }>();
-    for (const p of all) {
-      const e = map.get(p.supplierId) ?? { name: p.supplierName, transactions: 0, totalQty: 0 };
-      map.set(p.supplierId, { ...e, transactions: e.transactions + 1, totalQty: e.totalQty + p.quantity });
-    }
-    return [...map.values()].sort((a, b) => b.totalQty - a.totalQty);
-  }, [dateFrom, dateTo]);
+  const { data: purchases, isLoading } = useQuery({
+    queryKey: queryKeys.purchases.list({ dateFrom: dateFrom || undefined, dateTo: dateTo || undefined }),
+    queryFn: () => purchasesApi.list({ dateFrom: dateFrom || undefined, dateTo: dateTo || undefined }),
+  });
+
+  const supplierData = purchases
+    ? (() => {
+        const map = new Map<number, { name: string; transactions: number; totalQty: number }>();
+        for (const p of purchases) {
+          const e = map.get(p.supplierId) ?? { name: p.supplierName, transactions: 0, totalQty: 0 };
+          map.set(p.supplierId, { ...e, transactions: e.transactions + 1, totalQty: e.totalQty + p.quantity });
+        }
+        return [...map.values()].sort((a, b) => b.totalQty - a.totalQty);
+      })()
+    : null;
 
   return (
     <div className="space-y-4">
@@ -258,13 +297,15 @@ function BySupplierReport() {
         <PrintButton label="Print Supplier Report" />
       </div>
       <div className="bg-card border border-card-border rounded-lg overflow-hidden">
-        {!data?.length ? (
+        {isLoading ? (
+          <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+        ) : !supplierData?.length ? (
           <p className="px-4 py-8 text-center text-sm text-muted-foreground">No purchase data found.</p>
         ) : (
           <table className="w-full text-sm">
             <thead><tr className="border-b border-border bg-muted/30"><th className="px-4 py-2.5 text-left text-xs text-muted-foreground">Supplier</th><th className="px-4 py-2.5 text-right text-xs text-muted-foreground">Transactions</th><th className="px-4 py-2.5 text-right text-xs text-muted-foreground">Total Qty</th></tr></thead>
             <tbody className="divide-y divide-border">
-              {data.map((s, i) => (
+              {supplierData.map((s, i) => (
                 <tr key={i} className="hover:bg-muted/20">
                   <td className="px-4 py-3 font-medium">{s.name}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{s.transactions}</td>

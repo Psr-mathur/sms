@@ -13,7 +13,25 @@ export async function createSale(req: Request, res: Response) {
   const price = parseFloat(String(unitPrice));
   const total = qty * price;
 
+  try {
+  // Check stock availability before creating sale (inside a transaction to prevent race conditions)
   const sale = await prisma.$transaction(async (tx) => {
+    const existing = await tx.item.findUnique({
+      where: { id: itemId },
+    });
+
+    if (!existing) {
+      throw Object.assign(new Error("Item not found"), { statusCode: 404 });
+    }
+
+    const currentQty = parseFloat(existing.quantity.toString());
+    if (qty > currentQty) {
+      throw Object.assign(
+        new Error(`Insufficient stock. Only ${currentQty} available.`),
+        { statusCode: 400 }
+      );
+    }
+
     const s = await tx.sale.create({
       data: {
         itemId,
@@ -26,21 +44,16 @@ export async function createSale(req: Request, res: Response) {
       },
     });
 
-    const existing = await tx.item.findUnique({
+    const newQty = currentQty - qty;
+    const threshold = parseFloat(existing.lowStockThreshold.toString());
+    await tx.item.update({
       where: { id: itemId },
+      data: {
+        quantity: newQty,
+        status: computeStatus(newQty, threshold),
+        updatedAt: new Date(),
+      },
     });
-    if (existing) {
-      const newQty = Math.max(0, parseFloat(existing.quantity.toString()) - qty);
-      const threshold = parseFloat(existing.lowStockThreshold.toString());
-      await tx.item.update({
-        where: { id: itemId },
-        data: {
-          quantity: newQty,
-          status: computeStatus(newQty, threshold),
-          updatedAt: new Date(),
-        },
-      });
-    }
 
     return s;
   });
@@ -54,4 +67,8 @@ export async function createSale(req: Request, res: Response) {
   });
 
   return res.status(201).json(serializeSale(reloaded));
+  } catch (err: any) {
+    const status = err.statusCode ?? 500;
+    return res.status(status).json({ error: err.message ?? "Internal server error" });
+  }
 }

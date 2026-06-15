@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { db, type LocalPurchase } from "@/lib/db";
-import { Plus, X, Search, ShoppingCart, Filter } from "lucide-react";
+import { purchasesApi, itemsApi, suppliersApi } from "@/lib/db";
+import { queryKeys } from "@/lib/queryKeys";
+import { Plus, X, Search, ShoppingCart, Filter, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { AxiosError } from "axios";
 
 const schema = z.object({
   itemId: z.coerce.number().refine((val) => val !== 0 && !isNaN(val), "Select an item"),
@@ -16,48 +18,51 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
-function computeStatus(quantity: number, threshold: number): "in_stock" | "low_stock" | "out_of_stock" {
-  if (quantity <= 0) return "out_of_stock";
-  if (quantity <= threshold) return "low_stock";
-  return "in_stock";
-}
-
 function PurchaseForm({ onClose }: { onClose: () => void }) {
-  const items = useLiveQuery(() => db.items.orderBy("name").toArray(), []);
-  const suppliers = useLiveQuery(() => db.suppliers.orderBy("name").toArray(), []);
+  const queryClient = useQueryClient();
+
+  const { data: items } = useQuery({
+    queryKey: queryKeys.items.all(),
+    queryFn: () => itemsApi.list(),
+  });
+  const { data: suppliers } = useQuery({
+    queryKey: queryKeys.suppliers.all(),
+    queryFn: () => suppliersApi.list(),
+  });
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { date: new Date().toISOString().split("T")[0] },
   });
 
-  async function onSubmit(data: FormData) {
-    const quantity = Number(data.quantity);
-    const item = items?.find((i) => i.localId === Number(data.itemId));
-    const supplier = suppliers?.find((s) => s.localId === Number(data.supplierId));
-    if (!item || !supplier) return;
+  const createMutation = useMutation({
+    mutationFn: (data: FormData) =>
+      purchasesApi.create({
+        itemId: data.itemId,
+        supplierId: data.supplierId,
+        quantity: data.quantity,
+        unitPrice: 0,
+        notes: data.notes || undefined,
+        date: data.date,
+      }),
+    onSuccess: (purchase) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.purchases.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.items.all() });
+      const item = items?.find((i) => i.id === purchase.itemId);
+      const supplier = suppliers?.find((s) => s.id === purchase.supplierId);
+      toast.success(`Purchase recorded — ${purchase.quantity} ${item?.name ?? ""} from ${supplier?.name ?? ""}`);
+      onClose();
+    },
+    onError: (err: AxiosError<{ error: string }>) => {
+      toast.error(err.response?.data?.error ?? "Failed to record purchase");
+    },
+  });
 
-    await db.purchases.add({
-      itemId: item.localId!,
-      itemName: item.name,
-      supplierId: supplier.localId!,
-      supplierName: supplier.name,
-      quantity,
-      notes: data.notes || null,
-      date: data.date,
-      createdAt: new Date().toISOString(),
-    });
-
-    const newQty = item.quantity + quantity;
-    await db.items.update(item.localId!, {
-      quantity: newQty,
-      status: computeStatus(newQty, item.lowStockThreshold),
-      updatedAt: new Date().toISOString(),
-    });
-
-    toast.success(`Purchase recorded — ${quantity} ${item.name} from ${supplier.name}`);
-    onClose();
+  function onSubmit(data: FormData) {
+    createMutation.mutate(data);
   }
+
+  const isBusy = createMutation.isPending || isSubmitting;
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -72,17 +77,17 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
             <select {...register("itemId", { valueAsNumber: true })} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
               <option value="">Select item...</option>
               {items?.map((i) => (
-                <option key={i.localId} value={i.localId}>{i.name} (current: {i.quantity})</option>
+                <option key={i.id} value={i.id}>{i.name} (current: {i.quantity})</option>
               ))}
             </select>
             {errors.itemId && <p className="text-xs text-destructive mt-1">{errors.itemId.message}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Supplier *</label>
-              <select {...register("supplierId", { valueAsNumber: true })} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
+            <select {...register("supplierId", { valueAsNumber: true })} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
               <option value="">Select supplier...</option>
               {suppliers?.map((s) => (
-                <option key={s.localId} value={s.localId}>{s.name}</option>
+                <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
             {errors.supplierId && <p className="text-xs text-destructive mt-1">{errors.supplierId.message}</p>}
@@ -103,8 +108,8 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
           </div>
           <div className="flex gap-2 pt-2">
             <button type="button" onClick={onClose} className="flex-1 border border-border rounded-md py-2 text-sm font-medium hover:bg-muted/50 transition-colors">Cancel</button>
-            <button type="submit" disabled={isSubmitting} className="flex-1 bg-primary text-primary-foreground rounded-md py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
-              {isSubmitting ? "Recording..." : "Record Purchase"}
+            <button type="submit" disabled={isBusy} className="flex-1 bg-primary text-primary-foreground rounded-md py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
+              {isBusy ? "Recording..." : "Record Purchase"}
             </button>
           </div>
         </form>
@@ -119,15 +124,26 @@ export default function Purchases() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  const purchases = useLiveQuery(async () => {
-    let all = await db.purchases.orderBy("date").reverse().toArray();
-    if (search) all = all.filter((p) => p.itemName.toLowerCase().includes(search.toLowerCase()) || p.supplierName.toLowerCase().includes(search.toLowerCase()));
-    if (dateFrom) all = all.filter((p) => p.date >= dateFrom);
-    if (dateTo) all = all.filter((p) => p.date <= dateTo);
-    return all;
-  }, [search, dateFrom, dateTo]);
+  const { data: purchases, isLoading, isError } = useQuery({
+    queryKey: queryKeys.purchases.list({
+      dateFrom: dateFrom || undefined,
+      dateTo: dateTo || undefined,
+    }),
+    queryFn: () =>
+      purchasesApi.list({
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+      }),
+  });
 
-
+  const filteredPurchases = purchases
+    ?.slice()
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .filter((p) => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return p.itemName.toLowerCase().includes(q) || p.supplierName.toLowerCase().includes(q);
+    });
 
   return (
     <div className="p-4 md:p-6 space-y-4">
@@ -154,12 +170,20 @@ export default function Purchases() {
         </div>
       </div>
 
-      {purchases && purchases.length > 0 && (
-        <p className="text-sm text-muted-foreground">{purchases.length} record{purchases.length !== 1 ? "s" : ""}</p>
+      {filteredPurchases && filteredPurchases.length > 0 && (
+        <p className="text-sm text-muted-foreground">{filteredPurchases.length} record{filteredPurchases.length !== 1 ? "s" : ""}</p>
       )}
 
       <div className="bg-card border border-card-border rounded-lg overflow-hidden">
-        {!purchases || purchases.length === 0 ? (
+        {isLoading ? (
+          <div className="py-12 flex justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : isError ? (
+          <div className="py-12 text-center">
+            <p className="text-destructive text-sm">Failed to load purchases. Check your connection.</p>
+          </div>
+        ) : !filteredPurchases || filteredPurchases.length === 0 ? (
           <div className="py-12 text-center">
             <ShoppingCart className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
             <p className="text-muted-foreground text-sm">No purchases recorded yet.</p>
@@ -174,19 +198,16 @@ export default function Purchases() {
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Supplier</th>
                   <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Qty</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Notes</th>
-                  <th className="px-4 py-2.5"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {purchases.map((p) => (
-                  <tr key={p.localId} className="hover:bg-muted/20 transition-colors">
+                {filteredPurchases.map((p) => (
+                  <tr key={p.id} className="hover:bg-muted/20 transition-colors">
                     <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{p.date}</td>
                     <td className="px-4 py-3 font-medium">{p.itemName}</td>
                     <td className="px-4 py-3 text-muted-foreground">{p.supplierName}</td>
                     <td className="px-4 py-3 text-right tabular-nums font-medium">{p.quantity}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{p.notes ?? ""}</td>
-                    <td className="px-4 py-3 text-right">
-                    </td>
                   </tr>
                 ))}
               </tbody>

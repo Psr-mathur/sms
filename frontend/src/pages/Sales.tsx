@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { db, type LocalSale } from "@/lib/db";
-import { Plus, X, Search, TrendingUp, Filter } from "lucide-react";
+import { salesApi, itemsApi, customersApi } from "@/lib/db";
+import { queryKeys } from "@/lib/queryKeys";
+import { Plus, X, Search, TrendingUp, Filter, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { AxiosError } from "axios";
 
 const schema = z.object({
   itemId: z.coerce.number().refine((val) => val !== 0 && !isNaN(val), "Select an item"),
@@ -16,53 +18,53 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
-function computeStatus(quantity: number, threshold: number): "in_stock" | "low_stock" | "out_of_stock" {
-  if (quantity <= 0) return "out_of_stock";
-  if (quantity <= threshold) return "low_stock";
-  return "in_stock";
-}
-
 function SaleForm({ onClose }: { onClose: () => void }) {
-  const items = useLiveQuery(() => db.items.orderBy("name").toArray(), []);
-  const customers = useLiveQuery(() => db.customers.orderBy("name").toArray(), []);
+  const queryClient = useQueryClient();
+
+  const { data: items } = useQuery({
+    queryKey: queryKeys.items.all(),
+    queryFn: () => itemsApi.list(),
+  });
+  const { data: customers } = useQuery({
+    queryKey: queryKeys.customers.all(),
+    queryFn: () => customersApi.list(),
+  });
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { date: new Date().toISOString().split("T")[0] },
   });
 
-  async function onSubmit(data: FormData) {
-    const quantity = Number(data.quantity);
-    const item = items?.find((i) => i.localId === Number(data.itemId));
-    const customer = customers?.find((c) => c.localId === Number(data.customerId));
-    if (!item || !customer) return;
+  const createMutation = useMutation({
+    mutationFn: (data: FormData) =>
+      salesApi.create({
+        itemId: data.itemId,
+        customerId: data.customerId,
+        quantity: data.quantity,
+        unitPrice: 0,
+        notes: data.notes || undefined,
+        date: data.date,
+      }),
+    onSuccess: (sale) => {
+      // Invalidate sales AND items (backend deducted stock atomically)
+      queryClient.invalidateQueries({ queryKey: queryKeys.sales.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.items.all() });
+      const item = items?.find((i) => i.id === sale.itemId);
+      const customer = customers?.find((c) => c.id === sale.customerId);
+      toast.success(`Sale recorded — ${sale.quantity} ${item?.name ?? ""} to ${customer?.name ?? ""}`);
+      onClose();
+    },
+    onError: (err: AxiosError<{ error: string }>) => {
+      // Backend returns 400 with "Insufficient stock" if qty > available
+      toast.error(err.response?.data?.error ?? "Failed to record sale");
+    },
+  });
 
-    if (quantity > item.quantity) {
-      toast.error(`Insufficient stock. Only ${item.quantity} available.`);
-      return;
-    }
-
-    await db.sales.add({
-      itemId: item.localId!,
-      itemName: item.name,
-      customerId: customer.localId!,
-      customerName: customer.name,
-      quantity,
-      notes: data.notes || null,
-      date: data.date,
-      createdAt: new Date().toISOString(),
-    });
-
-    const newQty = Math.max(0, item.quantity - quantity);
-    await db.items.update(item.localId!, {
-      quantity: newQty,
-      status: computeStatus(newQty, item.lowStockThreshold),
-      updatedAt: new Date().toISOString(),
-    });
-
-    toast.success(`Sale recorded — ${quantity} ${item.name} to ${customer.name}`);
-    onClose();
+  function onSubmit(data: FormData) {
+    createMutation.mutate(data);
   }
+
+  const isBusy = createMutation.isPending || isSubmitting;
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -77,7 +79,7 @@ function SaleForm({ onClose }: { onClose: () => void }) {
             <select {...register("itemId")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
               <option value="">Select item...</option>
               {items?.map((i) => (
-                <option key={i.localId} value={i.localId}>{i.name} (available: {i.quantity})</option>
+                <option key={i.id} value={i.id}>{i.name} (available: {i.quantity})</option>
               ))}
             </select>
             {errors.itemId && <p className="text-xs text-destructive mt-1">{errors.itemId.message}</p>}
@@ -87,7 +89,7 @@ function SaleForm({ onClose }: { onClose: () => void }) {
             <select {...register("customerId")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
               <option value="">Select customer...</option>
               {customers?.map((c) => (
-                <option key={c.localId} value={c.localId}>{c.name}</option>
+                <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
             {errors.customerId && <p className="text-xs text-destructive mt-1">{errors.customerId.message}</p>}
@@ -108,8 +110,8 @@ function SaleForm({ onClose }: { onClose: () => void }) {
           </div>
           <div className="flex gap-2 pt-2">
             <button type="button" onClick={onClose} className="flex-1 border border-border rounded-md py-2 text-sm font-medium hover:bg-muted/50 transition-colors">Cancel</button>
-            <button type="submit" disabled={isSubmitting} className="flex-1 bg-emerald-600 text-white rounded-md py-2 text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50">
-              {isSubmitting ? "Recording..." : "Record Sale"}
+            <button type="submit" disabled={isBusy} className="flex-1 bg-emerald-600 text-white rounded-md py-2 text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50">
+              {isBusy ? "Recording..." : "Record Sale"}
             </button>
           </div>
         </form>
@@ -124,15 +126,26 @@ export default function Sales() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  const sales = useLiveQuery(async () => {
-    let all = await db.sales.orderBy("date").reverse().toArray();
-    if (search) all = all.filter((s) => s.itemName.toLowerCase().includes(search.toLowerCase()) || s.customerName.toLowerCase().includes(search.toLowerCase()));
-    if (dateFrom) all = all.filter((s) => s.date >= dateFrom);
-    if (dateTo) all = all.filter((s) => s.date <= dateTo);
-    return all;
-  }, [search, dateFrom, dateTo]);
+  const { data: sales, isLoading, isError } = useQuery({
+    queryKey: queryKeys.sales.list({
+      dateFrom: dateFrom || undefined,
+      dateTo: dateTo || undefined,
+    }),
+    queryFn: () =>
+      salesApi.list({
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+      }),
+  });
 
-
+  const filteredSales = sales
+    ?.slice()
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .filter((s) => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return s.itemName.toLowerCase().includes(q) || s.customerName.toLowerCase().includes(q);
+    });
 
   return (
     <div className="p-4 md:p-6 space-y-4">
@@ -159,12 +172,20 @@ export default function Sales() {
         </div>
       </div>
 
-      {sales && sales.length > 0 && (
-        <p className="text-sm text-muted-foreground">{sales.length} record{sales.length !== 1 ? "s" : ""}</p>
+      {filteredSales && filteredSales.length > 0 && (
+        <p className="text-sm text-muted-foreground">{filteredSales.length} record{filteredSales.length !== 1 ? "s" : ""}</p>
       )}
 
       <div className="bg-card border border-card-border rounded-lg overflow-hidden">
-        {!sales || sales.length === 0 ? (
+        {isLoading ? (
+          <div className="py-12 flex justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : isError ? (
+          <div className="py-12 text-center">
+            <p className="text-destructive text-sm">Failed to load sales. Check your connection.</p>
+          </div>
+        ) : !filteredSales || filteredSales.length === 0 ? (
           <div className="py-12 text-center">
             <TrendingUp className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
             <p className="text-muted-foreground text-sm">No sales recorded yet.</p>
@@ -179,19 +200,16 @@ export default function Sales() {
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Customer</th>
                   <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Qty</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Notes</th>
-                  <th className="px-4 py-2.5"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {sales.map((s) => (
-                  <tr key={s.localId} className="hover:bg-muted/20 transition-colors">
+                {filteredSales.map((s) => (
+                  <tr key={s.id} className="hover:bg-muted/20 transition-colors">
                     <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{s.date}</td>
                     <td className="px-4 py-3 font-medium">{s.itemName}</td>
                     <td className="px-4 py-3 text-muted-foreground">{s.customerName}</td>
                     <td className="px-4 py-3 text-right tabular-nums font-medium">{s.quantity}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{s.notes ?? ""}</td>
-                    <td className="px-4 py-3 text-right">
-                    </td>
                   </tr>
                 ))}
               </tbody>

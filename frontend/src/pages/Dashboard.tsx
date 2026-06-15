@@ -1,29 +1,58 @@
-import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "@/lib/db";
+import { useQuery } from "@tanstack/react-query";
+import { itemsApi, purchasesApi, salesApi } from "@/lib/db";
+import { queryKeys } from "@/lib/queryKeys";
 import { Link } from "wouter";
 import StatusBadge from "@/components/StatusBadge";
-import { Package, ShoppingCart, TrendingUp, AlertTriangle } from "lucide-react";
+import { Package, ShoppingCart, TrendingUp, AlertTriangle, Loader2 } from "lucide-react";
 
 export default function Dashboard() {
-  const items = useLiveQuery(() => db.items.toArray(), []);
-  const purchases = useLiveQuery(() => db.purchases.toArray(), []);
-  const sales = useLiveQuery(() => db.sales.toArray(), []);
-
   const today = new Date().toISOString().split("T")[0];
+
+  const { data: items } = useQuery({
+    queryKey: queryKeys.items.all(),
+    queryFn: () => itemsApi.list(),
+  });
+
+  const { data: purchases } = useQuery({
+    queryKey: queryKeys.purchases.list({ dateFrom: today, dateTo: today }),
+    queryFn: () => purchasesApi.list({ dateFrom: today, dateTo: today }),
+  });
+
+  const { data: sales } = useQuery({
+    queryKey: queryKeys.sales.list({ dateFrom: today, dateTo: today }),
+    queryFn: () => salesApi.list({ dateFrom: today, dateTo: today }),
+  });
+
+  // Also fetch recent activity (last 30 days)
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const { data: recentPurchases } = useQuery({
+    queryKey: queryKeys.purchases.list({ dateFrom: thirtyDaysAgo }),
+    queryFn: () => purchasesApi.list({ dateFrom: thirtyDaysAgo }),
+  });
+  const { data: recentSales } = useQuery({
+    queryKey: queryKeys.sales.list({ dateFrom: thirtyDaysAgo }),
+    queryFn: () => salesApi.list({ dateFrom: thirtyDaysAgo }),
+  });
 
   const totalItems = items?.length ?? 0;
   const inStock = items?.filter((i) => i.status === "in_stock").length ?? 0;
   const lowStock = items?.filter((i) => i.status === "low_stock").length ?? 0;
   const outOfStock = items?.filter((i) => i.status === "out_of_stock").length ?? 0;
 
-  const todayPurchases = purchases?.filter((p) => p.date === today) ?? [];
-  const todaySales = sales?.filter((s) => s.date === today) ?? [];
-  const todayPurchaseQty = todayPurchases.reduce((s, p) => s + p.quantity, 0);
-  const todaySaleQty = todaySales.reduce((s, sale) => s + sale.quantity, 0);
+  const todayPurchaseQty = purchases?.reduce((s, p) => s + p.quantity, 0) ?? 0;
+  const todaySaleQty = sales?.reduce((s, sale) => s + sale.quantity, 0) ?? 0;
 
   const recentActivity = [
-    ...(purchases ?? []).map((p) => ({ type: "purchase" as const, label: `Purchased ${p.quantity} ${p.itemName} from ${p.supplierName}`, date: p.createdAt })),
-    ...(sales ?? []).map((s) => ({ type: "sale" as const, label: `Sold ${s.quantity} ${s.itemName} to ${s.customerName}`, date: s.createdAt })),
+    ...(recentPurchases ?? []).map((p) => ({
+      type: "purchase" as const,
+      label: `Purchased ${p.quantity} ${p.itemName} from ${p.supplierName}`,
+      date: p.createdAt,
+    })),
+    ...(recentSales ?? []).map((s) => ({
+      type: "sale" as const,
+      label: `Sold ${s.quantity} ${s.itemName} to ${s.customerName}`,
+      date: s.createdAt,
+    })),
   ]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 8);
@@ -43,8 +72,14 @@ export default function Dashboard() {
             <Package className="h-4 w-4 text-muted-foreground" />
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Items</span>
           </div>
-          <p className="text-2xl font-bold">{totalItems}</p>
-          <p className="text-xs text-muted-foreground mt-1">{inStock} in stock</p>
+          {items ? (
+            <>
+              <p className="text-2xl font-bold">{totalItems}</p>
+              <p className="text-xs text-muted-foreground mt-1">{inStock} in stock</p>
+            </>
+          ) : (
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mt-1" />
+          )}
         </div>
 
         <div className="bg-card border border-card-border rounded-lg p-4">
@@ -52,8 +87,14 @@ export default function Dashboard() {
             <AlertTriangle className="h-4 w-4 text-amber-500" />
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Low / Out</span>
           </div>
-          <p className="text-2xl font-bold text-amber-600">{lowStock + outOfStock}</p>
-          <p className="text-xs text-muted-foreground mt-1">{outOfStock} out of stock</p>
+          {items ? (
+            <>
+              <p className="text-2xl font-bold text-amber-600">{lowStock + outOfStock}</p>
+              <p className="text-xs text-muted-foreground mt-1">{outOfStock} out of stock</p>
+            </>
+          ) : (
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mt-1" />
+          )}
         </div>
 
         <div className="bg-card border border-card-border rounded-lg p-4">
@@ -61,8 +102,14 @@ export default function Dashboard() {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Today In</span>
           </div>
-          <p className="text-2xl font-bold">{todayPurchases.length}</p>
-          <p className="text-xs text-muted-foreground mt-1">{todayPurchaseQty} units received</p>
+          {purchases ? (
+            <>
+              <p className="text-2xl font-bold">{purchases.length}</p>
+              <p className="text-xs text-muted-foreground mt-1">{todayPurchaseQty} units received</p>
+            </>
+          ) : (
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mt-1" />
+          )}
         </div>
 
         <div className="bg-card border border-card-border rounded-lg p-4">
@@ -70,8 +117,14 @@ export default function Dashboard() {
             <TrendingUp className="h-4 w-4 text-emerald-500" />
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Today Out</span>
           </div>
-          <p className="text-2xl font-bold text-emerald-600">{todaySales.length}</p>
-          <p className="text-xs text-muted-foreground mt-1">{todaySaleQty} units sold</p>
+          {sales ? (
+            <>
+              <p className="text-2xl font-bold text-emerald-600">{sales.length}</p>
+              <p className="text-xs text-muted-foreground mt-1">{todaySaleQty} units sold</p>
+            </>
+          ) : (
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mt-1" />
+          )}
         </div>
       </div>
 
@@ -106,7 +159,7 @@ export default function Dashboard() {
           ) : (
             <ul className="divide-y divide-border">
               {lowStockItems.map((item) => (
-                <li key={item.localId} className="px-4 py-2.5 flex items-center justify-between gap-2">
+                <li key={item.id} className="px-4 py-2.5 flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{item.name}</p>
                     <p className="text-xs text-muted-foreground">{item.quantity} remaining</p>
@@ -124,7 +177,11 @@ export default function Dashboard() {
           <h2 className="text-sm font-semibold">All Items</h2>
           <Link href="/items" className="text-xs text-primary hover:underline">Manage</Link>
         </div>
-        {!items || items.length === 0 ? (
+        {!items ? (
+          <div className="px-4 py-8 flex justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : items.length === 0 ? (
           <div className="px-4 py-8 text-center">
             <Package className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
             <p className="text-sm text-muted-foreground">No items yet.</p>
@@ -142,7 +199,7 @@ export default function Dashboard() {
               </thead>
               <tbody className="divide-y divide-border">
                 {items.slice(0, 10).map((item) => (
-                  <tr key={item.localId} className="hover:bg-muted/20 transition-colors">
+                  <tr key={item.id} className="hover:bg-muted/20 transition-colors">
                     <td className="px-4 py-2.5 font-medium">{item.name}</td>
                     <td className="px-4 py-2.5 text-right tabular-nums">{item.quantity}</td>
                     <td className="px-4 py-2.5 text-center"><StatusBadge status={item.status} /></td>

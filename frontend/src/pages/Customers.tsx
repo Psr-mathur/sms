@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { db, type LocalCustomer } from "@/lib/db";
-import { Plus, Pencil, X, Search, Users } from "lucide-react";
+import { customersApi, type Customer } from "@/lib/db";
+import { queryKeys } from "@/lib/queryKeys";
+import { Plus, Pencil, X, Search, Users, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { AxiosError } from "axios";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -16,7 +18,9 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
-function CustomerForm({ customer, onClose }: { customer?: LocalCustomer; onClose: () => void }) {
+function CustomerForm({ customer, onClose }: { customer?: Customer; onClose: () => void }) {
+  const queryClient = useQueryClient();
+
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -28,17 +32,39 @@ function CustomerForm({ customer, onClose }: { customer?: LocalCustomer; onClose
     },
   });
 
-  async function onSubmit(data: FormData) {
-    const now = new Date().toISOString();
-    if (customer?.localId) {
-      await db.customers.update(customer.localId, data);
-      toast.success("Customer updated");
-    } else {
-      await db.customers.add({ ...data, createdAt: now });
+  const createMutation = useMutation({
+    mutationFn: (data: FormData) => customersApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all() });
       toast.success("Customer added");
+      onClose();
+    },
+    onError: (err: AxiosError<{ error: string }>) => {
+      toast.error(err.response?.data?.error ?? "Failed to add customer");
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (data: FormData) => customersApi.update(customer!.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all() });
+      toast.success("Customer updated");
+      onClose();
+    },
+    onError: (err: AxiosError<{ error: string }>) => {
+      toast.error(err.response?.data?.error ?? "Failed to update customer");
+    },
+  });
+
+  function onSubmit(data: FormData) {
+    if (customer) {
+      updateMutation.mutate(data);
+    } else {
+      createMutation.mutate(data);
     }
-    onClose();
   }
+
+  const isBusy = createMutation.isPending || updateMutation.isPending || isSubmitting;
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -73,8 +99,8 @@ function CustomerForm({ customer, onClose }: { customer?: LocalCustomer; onClose
           </div>
           <div className="flex gap-2 pt-2">
             <button type="button" onClick={onClose} className="flex-1 border border-border rounded-md py-2 text-sm font-medium hover:bg-muted/50 transition-colors">Cancel</button>
-            <button type="submit" disabled={isSubmitting} className="flex-1 bg-primary text-primary-foreground rounded-md py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
-              {isSubmitting ? "Saving..." : customer ? "Save Changes" : "Add Customer"}
+            <button type="submit" disabled={isBusy} className="flex-1 bg-primary text-primary-foreground rounded-md py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
+              {isBusy ? "Saving..." : customer ? "Save Changes" : "Add Customer"}
             </button>
           </div>
         </form>
@@ -85,15 +111,13 @@ function CustomerForm({ customer, onClose }: { customer?: LocalCustomer; onClose
 
 export default function Customers() {
   const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState<LocalCustomer | undefined>();
+  const [editing, setEditing] = useState<Customer | undefined>();
   const [search, setSearch] = useState("");
 
-  const customers = useLiveQuery(async () => {
-    const all = await db.customers.orderBy("name").toArray();
-    return search ? all.filter((c) => c.name.toLowerCase().includes(search.toLowerCase())) : all;
-  }, [search]);
-
-
+  const { data: customers, isLoading, isError } = useQuery({
+    queryKey: queryKeys.customers.list({ search: search || undefined }),
+    queryFn: () => customersApi.list({ search: search || undefined }),
+  });
 
   return (
     <div className="p-4 md:p-6 space-y-4">
@@ -119,7 +143,15 @@ export default function Customers() {
       </div>
 
       <div className="bg-card border border-card-border rounded-lg overflow-hidden">
-        {!customers || customers.length === 0 ? (
+        {isLoading ? (
+          <div className="py-12 flex justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : isError ? (
+          <div className="py-12 text-center">
+            <p className="text-destructive text-sm">Failed to load customers. Check your connection.</p>
+          </div>
+        ) : !customers || customers.length === 0 ? (
           <div className="py-12 text-center">
             <Users className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
             <p className="text-muted-foreground text-sm">No customers yet.</p>
@@ -127,7 +159,7 @@ export default function Customers() {
         ) : (
           <div className="divide-y divide-border">
             {customers.map((c) => (
-              <div key={c.localId} className="px-4 py-3 flex items-center justify-between gap-4 hover:bg-muted/20 transition-colors">
+              <div key={c.id} className="px-4 py-3 flex items-center justify-between gap-4 hover:bg-muted/20 transition-colors">
                 <div className="min-w-0">
                   <p className="font-medium">{c.name}</p>
                   <div className="flex flex-wrap gap-x-4 mt-0.5">
