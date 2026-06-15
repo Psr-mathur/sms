@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import app from "./app.js";
 import { logger } from "./lib/logger.js";
+import { seedAdminUser } from "./lib/seed";
 
 // Load environment variables from .env file if present
 try {
@@ -24,6 +25,7 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-app.listen(port, () => {
+app.listen(port, async () => {
   logger.info({ port }, "Backend Server listening");
+  await seedAdminUser();
 });

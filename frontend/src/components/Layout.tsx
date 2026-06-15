@@ -10,11 +10,13 @@ import {
   RefreshCw,
   Wifi,
   WifiOff,
+  LogOut,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { runSync, getLastSync } from "@/lib/syncService";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -90,6 +92,7 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
+  const { user, logout } = useAuth();
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -121,8 +124,21 @@ export default function Layout({ children }: LayoutProps) {
           })}
         </nav>
 
-        <div className="px-3 py-3 border-t border-sidebar-border">
+        <div className="px-3 py-3 border-t border-sidebar-border space-y-2.5">
           <SyncButton />
+          <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-sidebar-accent/40 text-sidebar-foreground">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold truncate leading-tight">{user?.name}</p>
+              <p className="text-[10px] text-sidebar-foreground/50 truncate leading-none mt-0.5">@{user?.username}</p>
+            </div>
+            <button
+              onClick={logout}
+              className="p-1.5 hover:bg-sidebar-accent rounded text-sidebar-foreground/75 hover:text-red-400 transition-colors shrink-0"
+              title="Sign Out"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -134,7 +150,16 @@ export default function Layout({ children }: LayoutProps) {
             <Package className="h-4 w-4 text-amber-400" />
             <span className="font-bold text-sm">Stock Manager</span>
           </div>
-          <SyncButton />
+          <div className="flex items-center gap-3">
+            <SyncButton />
+            <button
+              onClick={logout}
+              className="p-1 hover:bg-sidebar-accent rounded text-sidebar-foreground/75 hover:text-red-400 transition-colors"
+              title="Sign Out"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </header>
 
         {/* Page content */}

@@ -9,6 +9,8 @@ import Suppliers from "@/pages/Suppliers";
 import Customers from "@/pages/Customers";
 import Reports from "@/pages/Reports";
 import NotFound from "@/pages/not-found";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import Login from "@/pages/Login";
 
 function Router() {
   return (
@@ -27,12 +29,35 @@ function Router() {
   );
 }
 
+function AppContent() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-400 text-sm tracking-wide">Loading Stock Manager...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login />;
+  }
+
+  return <Router />;
+}
+
 function App() {
   return (
-    <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-      <Router />
-      <Toaster richColors position="top-right" />
-    </WouterRouter>
+    <AuthProvider>
+      <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+        <AppContent />
+        <Toaster richColors position="top-right" />
+      </WouterRouter>
+    </AuthProvider>
   );
 }
 

@@ -1,0 +1,13 @@
+import { Request, Response } from "express";
+import { prisma } from "../../lib/prisma";
+import { DeleteSupplierParams } from "../../models/suppliers.model";
+
+export async function deleteSupplier(req: Request, res: Response) {
+  const params = DeleteSupplierParams.safeParse({ id: parseInt(String(req.params.id)) });
+  if (!params.success) return res.status(400).json({ error: "Invalid id" });
+
+  await prisma.supplier.delete({
+    where: { id: params.data.id },
+  });
+  return res.status(204).send();
+}
