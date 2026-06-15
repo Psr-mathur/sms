@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { listCustomers } from "./listCustomers";
-import { createCustomer } from "./createCustomer";
-import { getCustomer } from "./getCustomer";
-import { updateCustomer } from "./updateCustomer";
-import { deleteCustomer } from "./deleteCustomer";
+import { listCustomers } from "./listCustomers.js";
+import { createCustomer } from "./createCustomer.js";
+import { getCustomer } from "./getCustomer.js";
+import { updateCustomer } from "./updateCustomer.js";
+import { deleteCustomer } from "./deleteCustomer.js";
 
 export const customersRouter = Router();
 

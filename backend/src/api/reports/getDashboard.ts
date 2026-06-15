@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { prisma } from "../../lib/prisma";
+import { prisma } from "../../lib/prisma.js";
 
 export async function getDashboard(_req: Request, res: Response) {
   const items = await prisma.item.findMany();

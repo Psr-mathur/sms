@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { prisma } from "../../lib/prisma";
-import { GetSupplierParams } from "../../models/suppliers.model";
-import { serializeSupplier } from "./suppliers.router";
+import { prisma } from "../../lib/prisma.js";
+import { GetSupplierParams } from "../../models/suppliers.model.js";
+import { serializeSupplier } from "./suppliers.router.js";
 
 export async function getSupplier(req: Request, res: Response) {
   const params = GetSupplierParams.safeParse({ id: parseInt(String(req.params.id)) });

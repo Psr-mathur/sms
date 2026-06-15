@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { prisma } from "../../lib/prisma";
-import { UpdateItemParams, UpdateItemBody } from "../../models/items.model";
-import { serializeItem, computeStatus } from "./items.router";
+import { prisma } from "../../lib/prisma.js";
+import { UpdateItemParams, UpdateItemBody } from "../../models/items.model.js";
+import { serializeItem, computeStatus } from "./items.router.js";
 
 export async function updateItem(req: Request, res: Response) {
   const params = UpdateItemParams.safeParse({ id: parseInt(String(req.params.id)) });

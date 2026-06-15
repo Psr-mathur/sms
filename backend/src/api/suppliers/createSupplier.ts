@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { prisma } from "../../lib/prisma";
-import { CreateSupplierBody } from "../../models/suppliers.model";
-import { serializeSupplier } from "./suppliers.router";
+import { prisma } from "../../lib/prisma.js";
+import { CreateSupplierBody } from "../../models/suppliers.model.js";
+import { serializeSupplier } from "./suppliers.router.js";
 
 export async function createSupplier(req: Request, res: Response) {
   const body = CreateSupplierBody.safeParse(req.body);

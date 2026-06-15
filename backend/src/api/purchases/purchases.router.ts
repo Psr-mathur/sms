@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { listPurchases } from "./listPurchases";
-import { createPurchase } from "./createPurchase";
-import { getPurchase } from "./getPurchase";
-import { deletePurchase } from "./deletePurchase";
+import { listPurchases } from "./listPurchases.js";
+import { createPurchase } from "./createPurchase.js";
+import { getPurchase } from "./getPurchase.js";
+import { deletePurchase } from "./deletePurchase.js";
 
 export const purchasesRouter = Router();
 

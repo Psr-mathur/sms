@@ -1,6 +1,6 @@
-import { prisma } from "./prisma";
+import { prisma } from "./prisma.js";
 import bcrypt from "bcryptjs";
-import { logger } from "./logger";
+import { logger } from "./logger.js";
 
 export async function seedAdminUser() {
   try {

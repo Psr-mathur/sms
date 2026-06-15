@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { prisma } from "../../lib/prisma";
-import { SyncPushBody } from "../../models/sync.model";
-import { computeStatus } from "../items/items.router";
+import { prisma } from "../../lib/prisma.js";
+import { SyncPushBody } from "../../models/sync.model.js";
+import { computeStatus } from "../items/items.router.js";
 
 export async function pushSync(req: Request, res: Response) {
   const body = SyncPushBody.safeParse(req.body);

@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { pushSync } from "./pushSync";
-import { pullSync } from "./pullSync";
+import { pushSync } from "./pushSync.js";
+import { pullSync } from "./pullSync.js";
 
 export const syncRouter = Router();
 

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { prisma } from "../../lib/prisma";
-import { SyncPullQueryParams } from "../../models/sync.model";
+import { prisma } from "../../lib/prisma.js";
+import { SyncPullQueryParams } from "../../models/sync.model.js";
 
 export async function pullSync(req: Request, res: Response) {
   const query = SyncPullQueryParams.safeParse(req.query);

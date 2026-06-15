@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { prisma } from "../../lib/prisma";
-import { GetPurchaseParams } from "../../models/purchases.model";
-import { serializePurchase } from "./purchases.router";
+import { prisma } from "../../lib/prisma.js";
+import { GetPurchaseParams } from "../../models/purchases.model.js";
+import { serializePurchase } from "./purchases.router.js";
 
 export async function getPurchase(req: Request, res: Response) {
   const params = GetPurchaseParams.safeParse({ id: parseInt(String(req.params.id)) });

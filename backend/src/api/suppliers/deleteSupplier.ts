@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { prisma } from "../../lib/prisma";
-import { DeleteSupplierParams } from "../../models/suppliers.model";
+import { prisma } from "../../lib/prisma.js";
+import { DeleteSupplierParams } from "../../models/suppliers.model.js";
 
 export async function deleteSupplier(req: Request, res: Response) {
   const params = DeleteSupplierParams.safeParse({ id: parseInt(String(req.params.id)) });

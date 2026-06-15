@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { listSales } from "./listSales";
-import { createSale } from "./createSale";
-import { getSale } from "./getSale";
-import { deleteSale } from "./deleteSale";
+import { listSales } from "./listSales.js";
+import { createSale } from "./createSale.js";
+import { getSale } from "./getSale.js";
+import { deleteSale } from "./deleteSale.js";
 
 export const salesRouter = Router();
 

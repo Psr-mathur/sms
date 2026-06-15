@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { prisma } from "../../lib/prisma";
-import { GetMonthlyReportQueryParams } from "../../models/reports.model";
+import { prisma } from "../../lib/prisma.js";
+import { GetMonthlyReportQueryParams } from "../../models/reports.model.js";
 
 export async function getMonthly(req: Request, res: Response) {
   const query = GetMonthlyReportQueryParams.safeParse(req.query);

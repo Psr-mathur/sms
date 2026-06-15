@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { prisma } from "../../lib/prisma";
-import { DeleteItemParams } from "../../models/items.model";
+import { prisma } from "../../lib/prisma.js";
+import { DeleteItemParams } from "../../models/items.model.js";
 
 export async function deleteItem(req: Request, res: Response) {
   const params = DeleteItemParams.safeParse({ id: parseInt(String(req.params.id)) });

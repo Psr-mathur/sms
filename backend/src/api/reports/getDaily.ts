@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { prisma } from "../../lib/prisma";
-import { GetDailyReportQueryParams } from "../../models/reports.model";
-import { serializePurchase } from "../purchases/purchases.router";
-import { serializeSale } from "../sales/sales.router";
+import { prisma } from "../../lib/prisma.js";
+import { GetDailyReportQueryParams } from "../../models/reports.model.js";
+import { serializePurchase } from "../purchases/purchases.router.js";
+import { serializeSale } from "../sales/sales.router.js";
 
 export async function getDaily(req: Request, res: Response) {
   const query = GetDailyReportQueryParams.safeParse(req.query);

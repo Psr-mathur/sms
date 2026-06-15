@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { prisma } from "../../lib/prisma";
-import { UpdateSupplierParams, UpdateSupplierBody } from "../../models/suppliers.model";
-import { serializeSupplier } from "./suppliers.router";
+import { prisma } from "../../lib/prisma.js";
+import { UpdateSupplierParams, UpdateSupplierBody } from "../../models/suppliers.model.js";
+import { serializeSupplier } from "./suppliers.router.js";
 
 export async function updateSupplier(req: Request, res: Response) {
   const params = UpdateSupplierParams.safeParse({ id: parseInt(String(req.params.id)) });

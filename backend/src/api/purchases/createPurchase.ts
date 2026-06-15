@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { prisma } from "../../lib/prisma";
-import { CreatePurchaseBody } from "../../models/purchases.model";
-import { serializePurchase } from "./purchases.router";
-import { computeStatus } from "../items/items.router";
+import { prisma } from "../../lib/prisma.js";
+import { CreatePurchaseBody } from "../../models/purchases.model.js";
+import { serializePurchase } from "./purchases.router.js";
+import { computeStatus } from "../items/items.router.js";
 
 export async function createPurchase(req: Request, res: Response) {
   const body = CreatePurchaseBody.safeParse(req.body);

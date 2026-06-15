@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { prisma } from "../../lib/prisma";
-import { ListSuppliersQueryParams } from "../../models/suppliers.model";
-import { serializeSupplier } from "./suppliers.router";
+import { prisma } from "../../lib/prisma.js";
+import { ListSuppliersQueryParams } from "../../models/suppliers.model.js";
+import { serializeSupplier } from "./suppliers.router.js";
 
 export async function listSuppliers(req: Request, res: Response) {
   const query = ListSuppliersQueryParams.safeParse(req.query);

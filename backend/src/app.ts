@@ -2,10 +2,10 @@ import express from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import cookieParser from "cookie-parser";
-import router from "./api/api.router";
+import router from "./api/api.router.js";
 import { logger } from "./lib/logger.js";
-import { authenticate } from "./middleware/authenticate";
-import { adminRouter } from "./cms/admin";
+import { authenticate } from "./middleware/authenticate.js";
+import { adminRouter } from "./cms/admin.js";
 
 const app = express();
 

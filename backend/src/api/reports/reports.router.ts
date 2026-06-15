@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { getDashboard } from "./getDashboard";
-import { getDaily } from "./getDaily";
-import { getMonthly } from "./getMonthly";
-import { getByCustomer } from "./getByCustomer";
-import { getBySupplier } from "./getBySupplier";
+import { getDashboard } from "./getDashboard.js";
+import { getDaily } from "./getDaily.js";
+import { getMonthly } from "./getMonthly.js";
+import { getByCustomer } from "./getByCustomer.js";
+import { getBySupplier } from "./getBySupplier.js";
 
 export const reportsRouter = Router();
 

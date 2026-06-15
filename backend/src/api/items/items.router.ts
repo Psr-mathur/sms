@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { listItems } from "./listItems";
-import { createItem } from "./createItem";
-import { getItem } from "./getItem";
-import { updateItem } from "./updateItem";
-import { deleteItem } from "./deleteItem";
+import { listItems } from "./listItems.js";
+import { createItem } from "./createItem.js";
+import { getItem } from "./getItem.js";
+import { updateItem } from "./updateItem.js";
+import { deleteItem } from "./deleteItem.js";
 
 export const itemsRouter = Router();
 

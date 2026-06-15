@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { prisma } from "../../lib/prisma";
-import { GetByCustomerReportQueryParams } from "../../models/reports.model";
+import { prisma } from "../../lib/prisma.js";
+import { GetByCustomerReportQueryParams } from "../../models/reports.model.js";
 
 export async function getByCustomer(req: Request, res: Response) {
   const query = GetByCustomerReportQueryParams.safeParse(req.query);

@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { listSuppliers } from "./listSuppliers";
-import { createSupplier } from "./createSupplier";
-import { getSupplier } from "./getSupplier";
-import { updateSupplier } from "./updateSupplier";
-import { deleteSupplier } from "./deleteSupplier";
+import { listSuppliers } from "./listSuppliers.js";
+import { createSupplier } from "./createSupplier.js";
+import { getSupplier } from "./getSupplier.js";
+import { updateSupplier } from "./updateSupplier.js";
+import { deleteSupplier } from "./deleteSupplier.js";
 
 export const suppliersRouter = Router();
 
