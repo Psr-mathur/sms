@@ -7,10 +7,12 @@ import { salesRouter } from "./sales/sales.router";
 import { reportsRouter } from "./reports/reports.router";
 import { syncRouter } from "./sync/sync.router";
 import { healthRouter } from "./health/health.router";
+import { authRouter } from "./auth/auth.router";
 
 const router = Router();
 
 router.use("/", healthRouter);
+router.use("/auth", authRouter);
 router.use("/items", itemsRouter);
 router.use("/suppliers", suppliersRouter);
 router.use("/customers", customersRouter);
