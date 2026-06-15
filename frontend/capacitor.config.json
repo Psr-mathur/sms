@@ -1,0 +1,5 @@
+{
+  "appId": "com.example.sms",
+  "appName": "SMS App",
+  "webDir": "dist/public"
+}
