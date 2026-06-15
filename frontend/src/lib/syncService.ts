@@ -1,7 +1,8 @@
 import { db } from "./db";
+import { fetchWithBase } from "./api";
 
 async function syncPush(payload: any) {
-  const response = await fetch("/api/sync/push", {
+  const response = await fetchWithBase("/api/sync/push", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -16,7 +17,7 @@ async function syncPush(payload: any) {
 
 async function syncPull(params?: { since?: string }) {
   const url = params?.since ? `/api/sync/pull?since=${encodeURIComponent(params.since)}` : "/api/sync/pull";
-  const response = await fetch(url);
+  const response = await fetchWithBase(url);
   if (!response.ok) {
     throw new Error(`Sync pull failed: ${response.statusText}`);
   }

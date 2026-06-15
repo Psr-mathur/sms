@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "sonner";
+import { fetchWithBase } from "@/lib/api";
 
 interface User {
   id: number;
@@ -24,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function fetchMe() {
       try {
-        const res = await fetch("/api/auth/me");
+        const res = await fetchWithBase("/api/auth/me");
         if (res.ok) {
           const data = await res.json();
           setUser(data);
@@ -42,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(username: string, password: string): Promise<boolean> {
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetchWithBase("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -66,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function logout() {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await fetchWithBase("/api/auth/logout", { method: "POST" });
     } catch (err) {
       // Ignore network errors on logout
     } finally {

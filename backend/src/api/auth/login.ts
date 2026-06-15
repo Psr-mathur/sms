@@ -34,10 +34,12 @@ export async function login(req: Request, res: Response) {
       { expiresIn: "24h" }
     );
 
+    const isSecure = req.secure || req.headers["x-forwarded-proto"] === "https" || process.env["NODE_ENV"] === "production";
+
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env["NODE_ENV"] === "production",
-      sameSite: "lax",
+      secure: isSecure,
+      sameSite: isSecure ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
 

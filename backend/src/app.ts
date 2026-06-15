@@ -30,7 +30,16 @@ app.use(
   })
 );
 app.use(cookieParser());
-app.use(cors());
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+      callback(null, true);
+    },
+    credentials: true,
+  })
+);
 
 // Mount AdminJS Headless CMS at /admin.
 // We mount it BEFORE body parsers to prevent express-formidable (used by AdminJS) from hanging.
