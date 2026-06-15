@@ -8,8 +8,8 @@ import { Plus, X, Search, TrendingUp, Filter } from "lucide-react";
 import { toast } from "sonner";
 
 const schema = z.object({
-  itemId: z.coerce.number().min(1, "Select an item"),
-  customerId: z.coerce.number().min(1, "Select a customer"),
+  itemId: z.coerce.number().refine((val) => val !== 0 && !isNaN(val), "Select an item"),
+  customerId: z.coerce.number().refine((val) => val !== 0 && !isNaN(val), "Select a customer"),
   quantity: z.coerce.number().min(0.01, "Quantity must be greater than 0"),
   date: z.string().min(1, "Date is required"),
   notes: z.string().optional(),

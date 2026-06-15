@@ -11,7 +11,6 @@ import { toast } from "sonner";
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  quantity: z.coerce.number().min(0),
   lowStockThreshold: z.coerce.number().min(0),
 });
 type FormData = z.infer<typeof schema>;
@@ -28,19 +27,19 @@ function ItemForm({ item, onClose }: { item?: LocalItem; onClose: () => void }) 
     defaultValues: {
       name: item?.name ?? "",
       description: item?.description ?? "",
-      quantity: item?.quantity ?? 0,
       lowStockThreshold: item?.lowStockThreshold ?? 10,
     },
   });
 
   async function onSubmit(data: FormData) {
-    const status = computeStatus(data.quantity, data.lowStockThreshold);
+    const currentQty = item?.quantity ?? 0;
+    const status = computeStatus(currentQty, data.lowStockThreshold);
     const now = new Date().toISOString();
     if (item?.localId) {
       await db.items.update(item.localId, { ...data, status, updatedAt: now });
       toast.success("Item updated");
     } else {
-      await db.items.add({ ...data, status, createdAt: now, updatedAt: now });
+      await db.items.add({ ...data, quantity: 0, status, createdAt: now, updatedAt: now });
       toast.success("Item added");
     }
     onClose();
@@ -63,18 +62,12 @@ function ItemForm({ item, onClose }: { item?: LocalItem; onClose: () => void }) 
             <label className="block text-sm font-medium mb-1">Description</label>
             <input {...register("description")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Optional description" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium mb-1">Quantity *</label>
-              <input type="number" step="any" {...register("quantity")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
-              {errors.quantity && <p className="text-xs text-destructive mt-1">{errors.quantity.message}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Low Stock Threshold *</label>
-              <input type="number" step="any" {...register("lowStockThreshold")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
-            </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Low Stock Threshold *</label>
+            <input type="number" step="any" {...register("lowStockThreshold")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
+            {errors.lowStockThreshold && <p className="text-xs text-destructive mt-1">{errors.lowStockThreshold.message}</p>}
           </div>
-          <p className="text-xs text-muted-foreground -mt-2">Alert when quantity falls at or below the threshold</p>
+          <p className="text-xs text-muted-foreground">Alert when quantity falls at or below the threshold</p>
           <div className="flex gap-2 pt-2">
             <button type="button" onClick={onClose} className="flex-1 border border-border rounded-md py-2 text-sm font-medium hover:bg-muted/50 transition-colors">Cancel</button>
             <button type="submit" disabled={isSubmitting} className="flex-1 bg-primary text-primary-foreground rounded-md py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
