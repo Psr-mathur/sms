@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon --watch src --ext ts --exec tsx src/index.ts",
     "build": "tsc",
-    "start": "node --experimental-specifier-resolution=node dist/index.js",
+    "start": "node --import tsx dist/index.js",
     "db:push": "prisma db push",
     "db:generate": "prisma generate"
   },
