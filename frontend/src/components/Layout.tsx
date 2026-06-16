@@ -140,7 +140,6 @@ export default function Layout({ children }: LayoutProps) {
           {children}
         </main>
 
-        {/* Mobile bottom nav */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border z-50">
           <div className="flex overflow-x-auto scrollbar-none">
             {navItems.map(({ href, label, icon: Icon }) => {
@@ -150,7 +149,7 @@ export default function Layout({ children }: LayoutProps) {
                   key={href}
                   href={href}
                   className={cn(
-                    "flex-shrink-0 flex flex-col items-center gap-0.5 py-2 px-3 text-xs font-medium transition-colors",
+                    "flex-1 min-w-[40px] flex flex-col items-center gap-0.5 py-2 px-3 text-xs font-medium transition-colors",
                     active ? "text-amber-400" : "text-sidebar-foreground/50"
                   )}
                 >
