@@ -118,7 +118,7 @@ export default function Layout({ children }: LayoutProps) {
       {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile top bar */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 bg-sidebar text-sidebar-foreground border-b border-sidebar-border">
+        <header className="md:hidden flex items-center justify-between px-4 h-12 bg-sidebar text-sidebar-foreground border-b border-sidebar-border">
           <div className="flex items-center gap-2">
             <Package className="h-4 w-4 text-amber-400" />
             <span className="font-bold text-sm">Stock Manager</span>
@@ -140,7 +140,7 @@ export default function Layout({ children }: LayoutProps) {
           {children}
         </main>
 
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border z-50">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border z-50 h-14">
           <div className="flex overflow-x-auto scrollbar-none">
             {navItems.map(({ href, label, icon: Icon }) => {
               const active = location === href;

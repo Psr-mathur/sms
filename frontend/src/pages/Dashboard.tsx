@@ -139,7 +139,7 @@ export default function Dashboard() {
             <ul className="divide-y divide-border">
               {recentActivity.map((a, i) => (
                 <li key={i} className="px-4 py-2.5 flex items-center gap-2">
-                  <span className={`text-xs font-semibold shrink-0 ${a.type === "purchase" ? "text-blue-600" : "text-emerald-600"}`}>
+                  <span className={`text-xs text-center font-semibold shrink-0 w-8 ${a.type === "purchase" ? "text-blue-600" : "text-emerald-600"}`}>
                     {a.type === "purchase" ? "IN" : "OUT"}
                   </span>
                   <span className="text-sm truncate">{a.label}</span>

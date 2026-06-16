@@ -163,7 +163,10 @@ function ItemHistoryDrawer({ item, onClose }: { item: Item; onClose: () => void 
 
   return (
     <Sheet open={true} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full sm:max-w-[500px] p-0 flex flex-col h-full bg-card border-l border-card-border shadow-2xl">
+      <SheetContent 
+        overlayClassName="top-12 bottom-14 md:top-0 md:bottom-0"
+        className="w-full h-[calc(100vh-104px)] top-12 bottom-14 p-0 flex flex-col bg-card border-l border-card-border shadow-2xl md:top-0 md:bottom-0 md:h-full md:w-[500px] md:max-w-[500px]"
+      >
         <div className="p-6 border-b border-card-border">
           <SheetHeader className="text-left space-y-1">
             <div className="flex items-center gap-2">
