@@ -17,8 +17,6 @@ export const ListSalesResponseItem = zod.object({
   "customerId": zod.string(),
   "customerName": zod.string(),
   "quantity": zod.number(),
-  "unitPrice": zod.number(),
-  "totalPrice": zod.number(),
   "notes": zod.string().nullish(),
   "date": zod.coerce.date(),
   "createdAt": zod.coerce.date()
@@ -33,7 +31,6 @@ export const CreateSaleBody = zod.object({
   "itemId": zod.string().uuid(),
   "customerId": zod.string().uuid(),
   "quantity": zod.number(),
-  "unitPrice": zod.number(),
   "notes": zod.string().optional(),
   "date": zod.coerce.date()
 })
@@ -52,8 +49,6 @@ export const GetSaleResponse = zod.object({
   "customerId": zod.string(),
   "customerName": zod.string(),
   "quantity": zod.number(),
-  "unitPrice": zod.number(),
-  "totalPrice": zod.number(),
   "notes": zod.string().nullish(),
   "date": zod.coerce.date(),
   "createdAt": zod.coerce.date()

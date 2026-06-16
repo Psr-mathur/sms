@@ -29,7 +29,6 @@ export const SyncPushBody = zod.object({
     "itemId": zod.string(),
     "supplierId": zod.string(),
     "quantity": zod.number(),
-    "unitPrice": zod.number(),
     "notes": zod.string().optional(),
     "date": zod.coerce.date()
   })),
@@ -37,7 +36,6 @@ export const SyncPushBody = zod.object({
     "itemId": zod.string(),
     "customerId": zod.string(),
     "quantity": zod.number(),
-    "unitPrice": zod.number(),
     "notes": zod.string().optional(),
     "date": zod.coerce.date()
   }))
@@ -100,8 +98,6 @@ export const SyncPullResponse = zod.object({
     "supplierId": zod.string(),
     "supplierName": zod.string(),
     "quantity": zod.number(),
-    "unitPrice": zod.number(),
-    "totalPrice": zod.number(),
     "notes": zod.string().nullish(),
     "date": zod.coerce.date(),
     "createdAt": zod.coerce.date()
@@ -113,8 +109,6 @@ export const SyncPullResponse = zod.object({
     "customerId": zod.string(),
     "customerName": zod.string(),
     "quantity": zod.number(),
-    "unitPrice": zod.number(),
-    "totalPrice": zod.number(),
     "notes": zod.string().nullish(),
     "date": zod.coerce.date(),
     "createdAt": zod.coerce.date()

@@ -42,8 +42,6 @@ export interface Purchase {
   supplierId: string;
   supplierName: string;
   quantity: number;
-  unitPrice: number;
-  totalPrice: number;
   notes: string | null;
   date: string;
   createdAt: string;
@@ -56,8 +54,6 @@ export interface Sale {
   customerId: string;
   customerName: string;
   quantity: number;
-  unitPrice: number;
-  totalPrice: number;
   notes: string | null;
   date: string;
   createdAt: string;
@@ -163,7 +159,6 @@ export const purchasesApi = {
     itemId: string;
     supplierId: string;
     quantity: number;
-    unitPrice?: number;
     notes?: string;
     date: string;
   }): Promise<Purchase> =>
@@ -191,7 +186,6 @@ export const salesApi = {
     itemId: string;
     customerId: string;
     quantity: number;
-    unitPrice?: number;
     notes?: string;
     date: string;
   }): Promise<Sale> =>

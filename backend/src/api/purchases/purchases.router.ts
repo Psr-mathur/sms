@@ -14,8 +14,6 @@ export function serializePurchase(p: any) {
     supplierId: p.supplierId,
     supplierName: p.supplier?.name ?? "Unknown",
     quantity: parseFloat(p.quantity.toString()),
-    unitPrice: parseFloat(p.unitPrice.toString()),
-    totalPrice: parseFloat(p.totalPrice.toString()),
     notes: p.notes ?? null,
     date: p.date.toISOString().split("T")[0],
     createdAt: p.createdAt.toISOString(),

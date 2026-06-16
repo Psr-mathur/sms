@@ -41,7 +41,6 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
         itemId: data.itemId,
         supplierId: data.supplierId,
         quantity: data.quantity,
-        unitPrice: 0,
         notes: data.notes || undefined,
         date: data.date,
       }),

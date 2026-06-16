@@ -8,10 +8,8 @@ export async function createSale(req: Request, res: Response) {
   const body = CreateSaleBody.safeParse(req.body);
   if (!body.success) return res.status(400).json({ error: "Invalid body" });
 
-  const { itemId, customerId, quantity, unitPrice, notes, date } = body.data;
+  const { itemId, customerId, quantity, notes, date } = body.data;
   const qty = parseFloat(String(quantity));
-  const price = parseFloat(String(unitPrice));
-  const total = qty * price;
 
   try {
   // Check stock availability before creating sale (inside a transaction to prevent race conditions)
@@ -37,8 +35,6 @@ export async function createSale(req: Request, res: Response) {
         itemId,
         customerId,
         quantity: qty,
-        unitPrice: price,
-        totalPrice: total,
         notes: notes ?? null,
         date: new Date(date),
       },

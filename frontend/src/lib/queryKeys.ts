@@ -29,14 +29,14 @@ export const queryKeys = {
   // ─── Purchases ──────────────────────────────────────────────────────────
   purchases: {
     all: () => ["purchases"] as const,
-    list: (filters?: { dateFrom?: string; dateTo?: string; supplierId?: number; itemId?: number }) =>
+    list: (filters?: { dateFrom?: string; dateTo?: string; supplierId?: string; itemId?: string }) =>
       ["purchases", "list", filters] as const,
   },
 
   // ─── Sales ──────────────────────────────────────────────────────────────
   sales: {
     all: () => ["sales"] as const,
-    list: (filters?: { dateFrom?: string; dateTo?: string; customerId?: number; itemId?: number }) =>
+    list: (filters?: { dateFrom?: string; dateTo?: string; customerId?: string; itemId?: string }) =>
       ["sales", "list", filters] as const,
   },
 } as const;

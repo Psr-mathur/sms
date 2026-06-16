@@ -17,8 +17,6 @@ export const ListPurchasesResponseItem = zod.object({
   "supplierId": zod.string(),
   "supplierName": zod.string(),
   "quantity": zod.number(),
-  "unitPrice": zod.number(),
-  "totalPrice": zod.number(),
   "notes": zod.string().nullish(),
   "date": zod.coerce.date(),
   "createdAt": zod.coerce.date()
@@ -33,7 +31,6 @@ export const CreatePurchaseBody = zod.object({
   "itemId": zod.string().uuid(),
   "supplierId": zod.string().uuid(),
   "quantity": zod.number(),
-  "unitPrice": zod.number(),
   "notes": zod.string().optional(),
   "date": zod.coerce.date()
 })
@@ -52,8 +49,6 @@ export const GetPurchaseResponse = zod.object({
   "supplierId": zod.string(),
   "supplierName": zod.string(),
   "quantity": zod.number(),
-  "unitPrice": zod.number(),
-  "totalPrice": zod.number(),
   "notes": zod.string().nullish(),
   "date": zod.coerce.date(),
   "createdAt": zod.coerce.date()

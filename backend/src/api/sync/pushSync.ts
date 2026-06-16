@@ -99,14 +99,11 @@ export async function pushSync(req: Request, res: Response) {
   // Insert purchases
   for (const purchase of purchases) {
     const qty = parseFloat(String(purchase.quantity));
-    const price = parseFloat(String(purchase.unitPrice));
     await prisma.purchase.create({
       data: {
         itemId: purchase.itemId,
         supplierId: purchase.supplierId,
         quantity: qty,
-        unitPrice: price,
-        totalPrice: qty * price,
         notes: purchase.notes ?? null,
         date: new Date(purchase.date),
       },
@@ -117,14 +114,11 @@ export async function pushSync(req: Request, res: Response) {
   // Insert sales
   for (const sale of sales) {
     const qty = parseFloat(String(sale.quantity));
-    const price = parseFloat(String(sale.unitPrice));
     await prisma.sale.create({
       data: {
         itemId: sale.itemId,
         customerId: sale.customerId,
         quantity: qty,
-        unitPrice: price,
-        totalPrice: qty * price,
         notes: sale.notes ?? null,
         date: new Date(sale.date),
       },

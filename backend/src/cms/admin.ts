@@ -39,8 +39,6 @@ const adminJs = new AdminJS({
         properties: {
           id: { isId: true },
           quantity: { type: "number" },
-          unitPrice: { type: "number" },
-          totalPrice: { type: "number" },
         },
       },
     },
@@ -50,8 +48,6 @@ const adminJs = new AdminJS({
         properties: {
           id: { isId: true },
           quantity: { type: "number" },
-          unitPrice: { type: "number" },
-          totalPrice: { type: "number" },
         },
       },
     },

@@ -19,22 +19,22 @@ export async function getBySupplier(req: Request, res: Response) {
   });
   const suppliers = await prisma.supplier.findMany();
 
-  const supplierMap = new Map<string, { totalPurchases: number; totalValue: number; items: Map<string, { itemName: string; totalQuantity: number; totalValue: number }> }>();
+  const supplierMap = new Map<string, { totalPurchases: number; items: Map<string, { itemName: string; totalQuantity: number }> }>();
   for (const p of purchases) {
-    const existing = supplierMap.get(p.supplierId) ?? { totalPurchases: 0, totalValue: 0, items: new Map() };
-    const existingItem = existing.items.get(p.itemId) ?? { itemName: p.item?.name ?? "Unknown", totalQuantity: 0, totalValue: 0 };
-    existing.items.set(p.itemId, { ...existingItem, totalQuantity: existingItem.totalQuantity + parseFloat(p.quantity.toString()), totalValue: existingItem.totalValue + parseFloat(p.totalPrice.toString()) });
-    supplierMap.set(p.supplierId, { totalPurchases: existing.totalPurchases + 1, totalValue: existing.totalValue + parseFloat(p.totalPrice.toString()), items: existing.items });
+    const existing = supplierMap.get(p.supplierId) ?? { totalPurchases: 0, items: new Map() };
+    const existingItem = existing.items.get(p.itemId) ?? { itemName: p.item?.name ?? "Unknown", totalQuantity: 0 };
+    existing.items.set(p.itemId, { ...existingItem, totalQuantity: existingItem.totalQuantity + parseFloat(p.quantity.toString()) });
+    supplierMap.set(p.supplierId, { totalPurchases: existing.totalPurchases + 1, items: existing.items });
   }
 
   const result = suppliers.filter(s => supplierMap.has(s.id)).map(s => {
     const data = supplierMap.get(s.id)!;
     return {
       supplierId: s.id, supplierName: s.name,
-      totalPurchases: data.totalPurchases, totalValue: data.totalValue,
+      totalPurchases: data.totalPurchases,
       items: [...data.items.entries()].map(([itemId, d]) => ({ itemId, ...d })),
     };
   });
 
-  return res.json(result.sort((a, b) => b.totalValue - a.totalValue));
+  return res.json(result.sort((a, b) => b.totalPurchases - a.totalPurchases));
 }

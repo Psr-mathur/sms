@@ -14,8 +14,6 @@ export function serializeSale(s: any) {
     customerId: s.customerId,
     customerName: s.customer?.name ?? "Unknown",
     quantity: parseFloat(s.quantity.toString()),
-    unitPrice: parseFloat(s.unitPrice.toString()),
-    totalPrice: parseFloat(s.totalPrice.toString()),
     notes: s.notes ?? null,
     date: s.date.toISOString().split("T")[0],
     createdAt: s.createdAt.toISOString(),

@@ -27,7 +27,7 @@ export async function getDaily(req: Request, res: Response) {
 
   return res.json({
     date: dateStr,
-    purchases: { count: purchases.length, totalValue: purchases.reduce((s, p) => s + parseFloat(p.totalPrice.toString()), 0), items: purchaseItems },
-    sales: { count: sales.length, totalValue: sales.reduce((s, sale) => s + parseFloat(sale.totalPrice.toString()), 0), items: saleItems },
+    purchases: { count: purchases.length, items: purchaseItems },
+    sales: { count: sales.length, items: saleItems },
   });
 }

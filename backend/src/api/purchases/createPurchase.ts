@@ -8,10 +8,8 @@ export async function createPurchase(req: Request, res: Response) {
   const body = CreatePurchaseBody.safeParse(req.body);
   if (!body.success) return res.status(400).json({ error: "Invalid body" });
 
-  const { itemId, supplierId, quantity, unitPrice, notes, date } = body.data;
+  const { itemId, supplierId, quantity, notes, date } = body.data;
   const qty = parseFloat(String(quantity));
-  const price = parseFloat(String(unitPrice));
-  const total = qty * price;
 
   try {
     const purchase = await prisma.$transaction(async (tx) => {
@@ -20,8 +18,6 @@ export async function createPurchase(req: Request, res: Response) {
           itemId,
           supplierId,
           quantity: qty,
-          unitPrice: price,
-          totalPrice: total,
           notes: notes ?? null,
           date: new Date(date),
         },

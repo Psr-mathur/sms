@@ -19,22 +19,22 @@ export async function getByCustomer(req: Request, res: Response) {
   });
   const customers = await prisma.customer.findMany();
 
-  const customerMap = new Map<string, { totalSales: number; totalValue: number; items: Map<string, { itemName: string; totalQuantity: number; totalValue: number }> }>();
+  const customerMap = new Map<string, { totalSales: number; items: Map<string, { itemName: string; totalQuantity: number }> }>();
   for (const s of sales) {
-    const existing = customerMap.get(s.customerId) ?? { totalSales: 0, totalValue: 0, items: new Map() };
-    const existingItem = existing.items.get(s.itemId) ?? { itemName: s.item?.name ?? "Unknown", totalQuantity: 0, totalValue: 0 };
-    existing.items.set(s.itemId, { ...existingItem, totalQuantity: existingItem.totalQuantity + parseFloat(s.quantity.toString()), totalValue: existingItem.totalValue + parseFloat(s.totalPrice.toString()) });
-    customerMap.set(s.customerId, { totalSales: existing.totalSales + 1, totalValue: existing.totalValue + parseFloat(s.totalPrice.toString()), items: existing.items });
+    const existing = customerMap.get(s.customerId) ?? { totalSales: 0, items: new Map() };
+    const existingItem = existing.items.get(s.itemId) ?? { itemName: s.item?.name ?? "Unknown", totalQuantity: 0 };
+    existing.items.set(s.itemId, { ...existingItem, totalQuantity: existingItem.totalQuantity + parseFloat(s.quantity.toString()) });
+    customerMap.set(s.customerId, { totalSales: existing.totalSales + 1, items: existing.items });
   }
 
   const result = customers.filter(c => customerMap.has(c.id)).map(c => {
     const data = customerMap.get(c.id)!;
     return {
       customerId: c.id, customerName: c.name,
-      totalSales: data.totalSales, totalValue: data.totalValue,
+      totalSales: data.totalSales,
       items: [...data.items.entries()].map(([itemId, d]) => ({ itemId, ...d })),
     };
   });
 
-  return res.json(result.sort((a, b) => b.totalValue - a.totalValue));
+  return res.json(result.sort((a, b) => b.totalSales - a.totalSales));
 }

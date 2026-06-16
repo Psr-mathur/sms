@@ -9,25 +9,21 @@ export const GetDashboardResponse = zod.object({
   "lowStockCount": zod.number(),
   "outOfStockCount": zod.number(),
   "todayPurchases": zod.object({
-    "count": zod.number(),
-    "totalValue": zod.number()
+    "count": zod.number()
   }),
   "todaySales": zod.object({
-    "count": zod.number(),
-    "totalValue": zod.number()
+    "count": zod.number()
   }),
   "recentActivity": zod.array(zod.object({
     "id": zod.string(),
     "type": zod.enum(['purchase', 'sale']),
     "description": zod.string(),
-    "date": zod.coerce.date(),
-    "value": zod.number().nullish()
+    "date": zod.coerce.date()
   })),
   "topItems": zod.array(zod.object({
-    "itemId": zod.number(),
+    "itemId": zod.string(),
     "itemName": zod.string(),
-    "totalQuantity": zod.number(),
-    "totalValue": zod.number()
+    "totalQuantity": zod.number()
   }))
 })
 
@@ -42,7 +38,6 @@ export const GetDailyReportResponse = zod.object({
   "date": zod.coerce.date(),
   "purchases": zod.object({
     "count": zod.number(),
-    "totalValue": zod.number(),
     "items": zod.array(zod.object({
       "id": zod.string(),
       "itemId": zod.string(),
@@ -50,8 +45,6 @@ export const GetDailyReportResponse = zod.object({
       "supplierId": zod.string(),
       "supplierName": zod.string(),
       "quantity": zod.number(),
-      "unitPrice": zod.number(),
-      "totalPrice": zod.number(),
       "notes": zod.string().nullish(),
       "date": zod.coerce.date(),
       "createdAt": zod.coerce.date()
@@ -59,7 +52,6 @@ export const GetDailyReportResponse = zod.object({
   }),
   "sales": zod.object({
     "count": zod.number(),
-    "totalValue": zod.number(),
     "items": zod.array(zod.object({
       "id": zod.string(),
       "itemId": zod.string(),
@@ -67,8 +59,6 @@ export const GetDailyReportResponse = zod.object({
       "customerId": zod.string(),
       "customerName": zod.string(),
       "quantity": zod.number(),
-      "unitPrice": zod.number(),
-      "totalPrice": zod.number(),
       "notes": zod.string().nullish(),
       "date": zod.coerce.date(),
       "createdAt": zod.coerce.date()
@@ -88,19 +78,15 @@ export const GetMonthlyReportResponse = zod.object({
   "year": zod.number(),
   "month": zod.number(),
   "purchases": zod.object({
-    "count": zod.number(),
-    "totalValue": zod.number()
+    "count": zod.number()
   }),
   "sales": zod.object({
-    "count": zod.number(),
-    "totalValue": zod.number()
+    "count": zod.number()
   }),
   "dailyBreakdown": zod.array(zod.object({
     "date": zod.coerce.date(),
     "purchaseCount": zod.number(),
-    "purchaseValue": zod.number(),
-    "saleCount": zod.number(),
-    "saleValue": zod.number()
+    "saleCount": zod.number()
   }))
 })
 
@@ -116,12 +102,10 @@ export const GetByCustomerReportResponseItem = zod.object({
   "customerId": zod.string(),
   "customerName": zod.string(),
   "totalSales": zod.number(),
-  "totalValue": zod.number(),
   "items": zod.array(zod.object({
     "itemId": zod.string(),
     "itemName": zod.string(),
-    "totalQuantity": zod.number(),
-    "totalValue": zod.number()
+    "totalQuantity": zod.number()
   }))
 })
 
@@ -139,12 +123,10 @@ export const GetBySupplierReportResponseItem = zod.object({
   "supplierId": zod.string(),
   "supplierName": zod.string(),
   "totalPurchases": zod.number(),
-  "totalValue": zod.number(),
   "items": zod.array(zod.object({
     "itemId": zod.string(),
     "itemName": zod.string(),
-    "totalQuantity": zod.number(),
-    "totalValue": zod.number()
+    "totalQuantity": zod.number()
   }))
 })
 
