@@ -4,17 +4,17 @@ import * as zod from 'zod';
  * @summary List sale records
  */
 export const ListSalesQueryParams = zod.object({
-  "customerId": zod.coerce.number().optional(),
-  "itemId": zod.coerce.number().optional(),
-  "dateFrom": zod.date().optional(),
-  "dateTo": zod.date().optional()
+  "customerId": zod.string().uuid().optional(),
+  "itemId": zod.string().uuid().optional(),
+  "dateFrom": zod.coerce.date().optional(),
+  "dateTo": zod.coerce.date().optional()
 })
 
 export const ListSalesResponseItem = zod.object({
-  "id": zod.number(),
-  "itemId": zod.number(),
+  "id": zod.string(),
+  "itemId": zod.string(),
   "itemName": zod.string(),
-  "customerId": zod.number(),
+  "customerId": zod.string(),
   "customerName": zod.string(),
   "quantity": zod.number(),
   "unitPrice": zod.number(),
@@ -30,8 +30,8 @@ export const ListSalesResponse = zod.array(ListSalesResponseItem)
  * @summary Record a sale (stock out)
  */
 export const CreateSaleBody = zod.object({
-  "itemId": zod.number(),
-  "customerId": zod.number(),
+  "itemId": zod.string().uuid(),
+  "customerId": zod.string().uuid(),
   "quantity": zod.number(),
   "unitPrice": zod.number(),
   "notes": zod.string().optional(),
@@ -42,14 +42,14 @@ export const CreateSaleBody = zod.object({
  * @summary Get a sale record
  */
 export const GetSaleParams = zod.object({
-  "id": zod.coerce.number()
+  "id": zod.string().uuid()
 })
 
 export const GetSaleResponse = zod.object({
-  "id": zod.number(),
-  "itemId": zod.number(),
+  "id": zod.string(),
+  "itemId": zod.string(),
   "itemName": zod.string(),
-  "customerId": zod.number(),
+  "customerId": zod.string(),
   "customerName": zod.string(),
   "quantity": zod.number(),
   "unitPrice": zod.number(),
@@ -63,5 +63,5 @@ export const GetSaleResponse = zod.object({
  * @summary Delete a sale record
  */
 export const DeleteSaleParams = zod.object({
-  "id": zod.coerce.number()
+  "id": zod.string().uuid()
 })

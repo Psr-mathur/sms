@@ -6,7 +6,7 @@ export const LoginBody = zod.object({
 });
 
 export const UserResponse = zod.object({
-  id: zod.number(),
+  id: zod.string(),
   username: zod.string(),
   name: zod.string(),
 });

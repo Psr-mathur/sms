@@ -9,11 +9,10 @@ export const ListItemsQueryParams = zod.object({
 })
 
 export const ListItemsResponseItem = zod.object({
-  "id": zod.number(),
+  "id": zod.string(),
   "name": zod.string(),
   "description": zod.string().nullish(),
   "quantity": zod.number(),
-  "unit": zod.string(),
   "status": zod.enum(['in_stock', 'low_stock', 'out_of_stock']),
   "lowStockThreshold": zod.number(),
   "createdAt": zod.coerce.date(),
@@ -28,24 +27,21 @@ export const ListItemsResponse = zod.array(ListItemsResponseItem)
 export const CreateItemBody = zod.object({
   "name": zod.string(),
   "description": zod.string().optional(),
-  "quantity": zod.number(),
-  "unit": zod.string(),
-  "lowStockThreshold": zod.number()
+  "lowStockThreshold": zod.number().optional()
 })
 
 /**
  * @summary Get a stock item
  */
 export const GetItemParams = zod.object({
-  "id": zod.coerce.number()
+  "id": zod.string().uuid()
 })
 
 export const GetItemResponse = zod.object({
-  "id": zod.number(),
+  "id": zod.string(),
   "name": zod.string(),
   "description": zod.string().nullish(),
   "quantity": zod.number(),
-  "unit": zod.string(),
   "status": zod.enum(['in_stock', 'low_stock', 'out_of_stock']),
   "lowStockThreshold": zod.number(),
   "createdAt": zod.coerce.date(),
@@ -56,23 +52,20 @@ export const GetItemResponse = zod.object({
  * @summary Update a stock item
  */
 export const UpdateItemParams = zod.object({
-  "id": zod.coerce.number()
+  "id": zod.string().uuid()
 })
 
 export const UpdateItemBody = zod.object({
   "name": zod.string().optional(),
   "description": zod.string().optional(),
-  "quantity": zod.number().optional(),
-  "unit": zod.string().optional(),
   "lowStockThreshold": zod.number().optional()
 })
 
 export const UpdateItemResponse = zod.object({
-  "id": zod.number(),
+  "id": zod.string(),
   "name": zod.string(),
   "description": zod.string().nullish(),
   "quantity": zod.number(),
-  "unit": zod.string(),
   "status": zod.enum(['in_stock', 'low_stock', 'out_of_stock']),
   "lowStockThreshold": zod.number(),
   "createdAt": zod.coerce.date(),
@@ -83,5 +76,5 @@ export const UpdateItemResponse = zod.object({
  * @summary Delete a stock item
  */
 export const DeleteItemParams = zod.object({
-  "id": zod.coerce.number()
+  "id": zod.string().uuid()
 })

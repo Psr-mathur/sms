@@ -4,7 +4,7 @@ import { GetSaleParams } from "../../models/sales.model.js";
 import { serializeSale } from "./sales.router.js";
 
 export async function getSale(req: Request, res: Response) {
-  const params = GetSaleParams.safeParse({ id: parseInt(String(req.params.id)) });
+  const params = GetSaleParams.safeParse({ id: req.params.id });
   if (!params.success) return res.status(400).json({ error: "Invalid id" });
 
   const sale = await prisma.sale.findUnique({

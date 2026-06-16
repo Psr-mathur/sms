@@ -12,7 +12,6 @@ export async function pushSync(req: Request, res: Response) {
 
   // Insert items
   for (const item of items) {
-    const qty = parseFloat(String(item.quantity ?? 0));
     const threshold = parseFloat(String(item.lowStockThreshold ?? 5));
 
     const existing = await prisma.item.findFirst({
@@ -24,8 +23,6 @@ export async function pushSync(req: Request, res: Response) {
         where: { id: existing.id },
         data: {
           description: item.description ?? null,
-          quantity: qty,
-          status: computeStatus(qty, threshold),
           lowStockThreshold: threshold,
         },
       });
@@ -34,9 +31,6 @@ export async function pushSync(req: Request, res: Response) {
         data: {
           name: item.name,
           description: item.description ?? null,
-          quantity: qty,
-          unit: item.unit ?? "units",
-          status: computeStatus(qty, threshold),
           lowStockThreshold: threshold,
         },
       });

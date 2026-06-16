@@ -5,11 +5,10 @@ import api from './axios';
 export type ItemStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
 
 export interface Item {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
   quantity: number;
-  unit: string;
   status: ItemStatus;
   lowStockThreshold: number;
   createdAt: string;
@@ -17,7 +16,7 @@ export interface Item {
 }
 
 export interface Supplier {
-  id: number;
+  id: string;
   name: string;
   contactName: string | null;
   phone: string | null;
@@ -27,7 +26,7 @@ export interface Supplier {
 }
 
 export interface Customer {
-  id: number;
+  id: string;
   name: string;
   contactName: string | null;
   phone: string | null;
@@ -37,10 +36,10 @@ export interface Customer {
 }
 
 export interface Purchase {
-  id: number;
-  itemId: number;
+  id: string;
+  itemId: string;
   itemName: string;
-  supplierId: number;
+  supplierId: string;
   supplierName: string;
   quantity: number;
   unitPrice: number;
@@ -51,10 +50,10 @@ export interface Purchase {
 }
 
 export interface Sale {
-  id: number;
-  itemId: number;
+  id: string;
+  itemId: string;
   itemName: string;
-  customerId: number;
+  customerId: string;
   customerName: string;
   quantity: number;
   unitPrice: number;
@@ -70,25 +69,23 @@ export const itemsApi = {
   list: (params?: { search?: string; status?: ItemStatus }): Promise<Item[]> =>
     api.get('/api/items', { params }).then((r) => r.data),
 
-  get: (id: number): Promise<Item> =>
+  get: (id: string): Promise<Item> =>
     api.get(`/api/items/${id}`).then((r) => r.data),
 
   create: (body: {
     name: string;
     description?: string;
-    quantity?: number;
-    unit?: string;
     lowStockThreshold?: number;
   }): Promise<Item> =>
     api.post('/api/items', body).then((r) => r.data),
 
   update: (
-    id: number,
+    id: string,
     body: Partial<{ name: string; description: string; lowStockThreshold: number }>
   ): Promise<Item> =>
     api.patch(`/api/items/${id}`, body).then((r) => r.data),
 
-  delete: (id: number): Promise<void> =>
+  delete: (id: string): Promise<void> =>
     api.delete(`/api/items/${id}`).then(() => undefined),
 };
 
@@ -98,7 +95,7 @@ export const suppliersApi = {
   list: (params?: { search?: string }): Promise<Supplier[]> =>
     api.get('/api/suppliers', { params }).then((r) => r.data),
 
-  get: (id: number): Promise<Supplier> =>
+  get: (id: string): Promise<Supplier> =>
     api.get(`/api/suppliers/${id}`).then((r) => r.data),
 
   create: (body: {
@@ -111,12 +108,12 @@ export const suppliersApi = {
     api.post('/api/suppliers', body).then((r) => r.data),
 
   update: (
-    id: number,
+    id: string,
     body: Partial<{ name: string; contactName: string; phone: string; email: string; address: string }>
   ): Promise<Supplier> =>
     api.patch(`/api/suppliers/${id}`, body).then((r) => r.data),
 
-  delete: (id: number): Promise<void> =>
+  delete: (id: string): Promise<void> =>
     api.delete(`/api/suppliers/${id}`).then(() => undefined),
 };
 
@@ -126,7 +123,7 @@ export const customersApi = {
   list: (params?: { search?: string }): Promise<Customer[]> =>
     api.get('/api/customers', { params }).then((r) => r.data),
 
-  get: (id: number): Promise<Customer> =>
+  get: (id: string): Promise<Customer> =>
     api.get(`/api/customers/${id}`).then((r) => r.data),
 
   create: (body: {
@@ -139,12 +136,12 @@ export const customersApi = {
     api.post('/api/customers', body).then((r) => r.data),
 
   update: (
-    id: number,
+    id: string,
     body: Partial<{ name: string; contactName: string; phone: string; email: string; address: string }>
   ): Promise<Customer> =>
     api.patch(`/api/customers/${id}`, body).then((r) => r.data),
 
-  delete: (id: number): Promise<void> =>
+  delete: (id: string): Promise<void> =>
     api.delete(`/api/customers/${id}`).then(() => undefined),
 };
 
@@ -152,19 +149,19 @@ export const customersApi = {
 
 export const purchasesApi = {
   list: (params?: {
-    supplierId?: number;
-    itemId?: number;
+    supplierId?: string;
+    itemId?: string;
     dateFrom?: string;
     dateTo?: string;
   }): Promise<Purchase[]> =>
     api.get('/api/purchases', { params }).then((r) => r.data),
 
-  get: (id: number): Promise<Purchase> =>
+  get: (id: string): Promise<Purchase> =>
     api.get(`/api/purchases/${id}`).then((r) => r.data),
 
   create: (body: {
-    itemId: number;
-    supplierId: number;
+    itemId: string;
+    supplierId: string;
     quantity: number;
     unitPrice?: number;
     notes?: string;
@@ -172,7 +169,7 @@ export const purchasesApi = {
   }): Promise<Purchase> =>
     api.post('/api/purchases', body).then((r) => r.data),
 
-  delete: (id: number): Promise<void> =>
+  delete: (id: string): Promise<void> =>
     api.delete(`/api/purchases/${id}`).then(() => undefined),
 };
 
@@ -180,19 +177,19 @@ export const purchasesApi = {
 
 export const salesApi = {
   list: (params?: {
-    customerId?: number;
-    itemId?: number;
+    customerId?: string;
+    itemId?: string;
     dateFrom?: string;
     dateTo?: string;
   }): Promise<Sale[]> =>
     api.get('/api/sales', { params }).then((r) => r.data),
 
-  get: (id: number): Promise<Sale> =>
+  get: (id: string): Promise<Sale> =>
     api.get(`/api/sales/${id}`).then((r) => r.data),
 
   create: (body: {
-    itemId: number;
-    customerId: number;
+    itemId: string;
+    customerId: string;
     quantity: number;
     unitPrice?: number;
     notes?: string;
@@ -200,6 +197,6 @@ export const salesApi = {
   }): Promise<Sale> =>
     api.post('/api/sales', body).then((r) => r.data),
 
-  delete: (id: number): Promise<void> =>
+  delete: (id: string): Promise<void> =>
     api.delete(`/api/sales/${id}`).then(() => undefined),
 };

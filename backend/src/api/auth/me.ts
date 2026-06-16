@@ -12,7 +12,7 @@ export async function me(req: Request, res: Response) {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: number; username: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; username: string };
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
     });

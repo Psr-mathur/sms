@@ -4,7 +4,7 @@ import { GetSupplierParams } from "../../models/suppliers.model.js";
 import { serializeSupplier } from "./suppliers.router.js";
 
 export async function getSupplier(req: Request, res: Response) {
-  const params = GetSupplierParams.safeParse({ id: parseInt(String(req.params.id)) });
+  const params = GetSupplierParams.safeParse({ id: req.params.id });
   if (!params.success) return res.status(400).json({ error: "Invalid id" });
 
   const supplier = await prisma.supplier.findUnique({

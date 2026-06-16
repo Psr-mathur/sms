@@ -13,45 +13,44 @@ export async function createPurchase(req: Request, res: Response) {
   const price = parseFloat(String(unitPrice));
   const total = qty * price;
 
-  const purchase = await prisma.$transaction(async (tx) => {
-    const p = await tx.purchase.create({
-      data: {
-        itemId,
-        supplierId,
-        quantity: qty,
-        unitPrice: price,
-        totalPrice: total,
-        notes: notes ?? null,
-        date: new Date(date),
-      },
-    });
+  try {
+    const purchase = await prisma.$transaction(async (tx) => {
+      const p = await tx.purchase.create({
+        data: {
+          itemId,
+          supplierId,
+          quantity: qty,
+          unitPrice: price,
+          totalPrice: total,
+          notes: notes ?? null,
+          date: new Date(date),
+        },
+      });
 
-    const existing = await tx.item.findUnique({
-      where: { id: itemId },
-    });
-    if (existing) {
-      const newQty = parseFloat(existing.quantity.toString()) + qty;
-      const threshold = parseFloat(existing.lowStockThreshold.toString());
       await tx.item.update({
         where: { id: itemId },
         data: {
-          quantity: newQty,
-          status: computeStatus(newQty, threshold),
           updatedAt: new Date(),
         },
       });
+
+      return p;
+    });
+
+    const reloaded = await prisma.purchase.findUnique({
+      where: { id: purchase.id },
+      include: {
+        item: true,
+        supplier: true,
+      },
+    });
+
+    return res.status(201).json(serializePurchase(reloaded));
+  } catch (err: any) {
+    if (err.code === "P2003") {
+      return res.status(400).json({ error: "The referenced Item or Supplier does not exist." });
     }
-
-    return p;
-  });
-
-  const reloaded = await prisma.purchase.findUnique({
-    where: { id: purchase.id },
-    include: {
-      item: true,
-      supplier: true,
-    },
-  });
-
-  return res.status(201).json(serializePurchase(reloaded));
+    const status = err.statusCode ?? 500;
+    return res.status(status).json({ error: err.message ?? "Internal server error" });
+  }
 }

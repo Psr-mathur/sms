@@ -4,7 +4,7 @@ import { DeletePurchaseParams } from "../../models/purchases.model.js";
 import { computeStatus } from "../items/items.router.js";
 
 export async function deletePurchase(req: Request, res: Response) {
-  const params = DeletePurchaseParams.safeParse({ id: parseInt(String(req.params.id)) });
+  const params = DeletePurchaseParams.safeParse({ id: req.params.id });
   if (!params.success) return res.status(400).json({ error: "Invalid id" });
 
   const purchase = await prisma.purchase.findUnique({
@@ -13,22 +13,12 @@ export async function deletePurchase(req: Request, res: Response) {
 
   if (purchase) {
     await prisma.$transaction(async (tx) => {
-      const existing = await tx.item.findUnique({
+      await tx.item.update({
         where: { id: purchase.itemId },
+        data: {
+          updatedAt: new Date(),
+        },
       });
-      if (existing) {
-        const qty = parseFloat(purchase.quantity.toString());
-        const newQty = Math.max(0, parseFloat(existing.quantity.toString()) - qty);
-        const threshold = parseFloat(existing.lowStockThreshold.toString());
-        await tx.item.update({
-          where: { id: purchase.itemId },
-          data: {
-            quantity: newQty,
-            status: computeStatus(newQty, threshold),
-            updatedAt: new Date(),
-          },
-        });
-      }
       await tx.purchase.delete({
         where: { id: params.data.id },
       });

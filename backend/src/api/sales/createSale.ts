@@ -24,7 +24,7 @@ export async function createSale(req: Request, res: Response) {
       throw Object.assign(new Error("Item not found"), { statusCode: 404 });
     }
 
-    const currentQty = parseFloat(existing.quantity.toString());
+    const currentQty = parseFloat(existing.currentStock.toString());
     if (qty > currentQty) {
       throw Object.assign(
         new Error(`Insufficient stock. Only ${currentQty} available.`),
@@ -44,17 +44,6 @@ export async function createSale(req: Request, res: Response) {
       },
     });
 
-    const newQty = currentQty - qty;
-    const threshold = parseFloat(existing.lowStockThreshold.toString());
-    await tx.item.update({
-      where: { id: itemId },
-      data: {
-        quantity: newQty,
-        status: computeStatus(newQty, threshold),
-        updatedAt: new Date(),
-      },
-    });
-
     return s;
   });
 
@@ -68,6 +57,9 @@ export async function createSale(req: Request, res: Response) {
 
   return res.status(201).json(serializeSale(reloaded));
   } catch (err: any) {
+    if (err.code === "P2003") {
+      return res.status(400).json({ error: "The referenced Item or Customer does not exist." });
+    }
     const status = err.statusCode ?? 500;
     return res.status(status).json({ error: err.message ?? "Internal server error" });
   }

@@ -10,8 +10,8 @@ import { toast } from "sonner";
 import { AxiosError } from "axios";
 
 const schema = z.object({
-  itemId: z.coerce.number().refine((val) => val !== 0 && !isNaN(val), "Select an item"),
-  customerId: z.coerce.number().refine((val) => val !== 0 && !isNaN(val), "Select a customer"),
+  itemId: z.string().min(1, "Select an item"),
+  customerId: z.string().min(1, "Select a customer"),
   quantity: z.coerce.number().min(0.01, "Quantity must be greater than 0"),
   date: z.string().min(1, "Date is required"),
   notes: z.string().optional(),

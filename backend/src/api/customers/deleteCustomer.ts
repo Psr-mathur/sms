@@ -3,7 +3,7 @@ import { prisma } from "../../lib/prisma.js";
 import { DeleteCustomerParams } from "../../models/customers.model.js";
 
 export async function deleteCustomer(req: Request, res: Response) {
-  const params = DeleteCustomerParams.safeParse({ id: parseInt(String(req.params.id)) });
+  const params = DeleteCustomerParams.safeParse({ id: req.params.id });
   if (!params.success) return res.status(400).json({ error: "Invalid id" });
 
   await prisma.customer.delete({

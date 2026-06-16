@@ -35,7 +35,7 @@ export const GetDashboardResponse = zod.object({
  * @summary Daily purchases and sales summary
  */
 export const GetDailyReportQueryParams = zod.object({
-  "date": zod.date().optional()
+  "date": zod.coerce.date().optional()
 })
 
 export const GetDailyReportResponse = zod.object({
@@ -44,10 +44,10 @@ export const GetDailyReportResponse = zod.object({
     "count": zod.number(),
     "totalValue": zod.number(),
     "items": zod.array(zod.object({
-      "id": zod.number(),
-      "itemId": zod.number(),
+      "id": zod.string(),
+      "itemId": zod.string(),
       "itemName": zod.string(),
-      "supplierId": zod.number(),
+      "supplierId": zod.string(),
       "supplierName": zod.string(),
       "quantity": zod.number(),
       "unitPrice": zod.number(),
@@ -61,10 +61,10 @@ export const GetDailyReportResponse = zod.object({
     "count": zod.number(),
     "totalValue": zod.number(),
     "items": zod.array(zod.object({
-      "id": zod.number(),
-      "itemId": zod.number(),
+      "id": zod.string(),
+      "itemId": zod.string(),
       "itemName": zod.string(),
-      "customerId": zod.number(),
+      "customerId": zod.string(),
       "customerName": zod.string(),
       "quantity": zod.number(),
       "unitPrice": zod.number(),
@@ -108,17 +108,17 @@ export const GetMonthlyReportResponse = zod.object({
  * @summary Sales grouped by customer
  */
 export const GetByCustomerReportQueryParams = zod.object({
-  "dateFrom": zod.date().optional(),
-  "dateTo": zod.date().optional()
+  "dateFrom": zod.coerce.date().optional(),
+  "dateTo": zod.coerce.date().optional()
 })
 
 export const GetByCustomerReportResponseItem = zod.object({
-  "customerId": zod.number(),
+  "customerId": zod.string(),
   "customerName": zod.string(),
   "totalSales": zod.number(),
   "totalValue": zod.number(),
   "items": zod.array(zod.object({
-    "itemId": zod.number(),
+    "itemId": zod.string(),
     "itemName": zod.string(),
     "totalQuantity": zod.number(),
     "totalValue": zod.number()
@@ -131,17 +131,17 @@ export const GetByCustomerReportResponse = zod.array(GetByCustomerReportResponse
  * @summary Purchases grouped by supplier
  */
 export const GetBySupplierReportQueryParams = zod.object({
-  "dateFrom": zod.date().optional(),
-  "dateTo": zod.date().optional()
+  "dateFrom": zod.coerce.date().optional(),
+  "dateTo": zod.coerce.date().optional()
 })
 
 export const GetBySupplierReportResponseItem = zod.object({
-  "supplierId": zod.number(),
+  "supplierId": zod.string(),
   "supplierName": zod.string(),
   "totalPurchases": zod.number(),
   "totalValue": zod.number(),
   "items": zod.array(zod.object({
-    "itemId": zod.number(),
+    "itemId": zod.string(),
     "itemName": zod.string(),
     "totalQuantity": zod.number(),
     "totalValue": zod.number()

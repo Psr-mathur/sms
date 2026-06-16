@@ -29,7 +29,6 @@ const adminJs = new AdminJS({
       options: {
         properties: {
           id: { isId: true },
-          quantity: { type: "number" },
           lowStockThreshold: { type: "number" },
         },
       },

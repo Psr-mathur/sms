@@ -7,21 +7,33 @@ export async function createItem(req: Request, res: Response) {
   const body = CreateItemBody.safeParse(req.body);
   if (!body.success) return res.status(400).json({ error: "Invalid body" });
 
-  const { name, description, quantity, unit, lowStockThreshold } = body.data;
-  const qty = parseFloat(String(quantity ?? 0));
+  const { name, description, lowStockThreshold } = body.data;
+
+  const existingItem = await prisma.item.findFirst({
+    where: { name: { equals: name, mode: 'insensitive' } },
+  });
+  if (existingItem) {
+    return res.status(400).json({ error: `An item with the name "${name}" already exists.` });
+  }
+
   const threshold = parseFloat(String(lowStockThreshold ?? 5));
-  const status = computeStatus(qty, threshold);
 
   const item = await prisma.item.create({
     data: {
       name,
       description: description ?? null,
-      quantity: qty,
-      unit: unit ?? "units",
-      status,
       lowStockThreshold: threshold,
     },
   });
 
-  return res.status(201).json(serializeItem(item));
+  const qty = 0;
+  const status = computeStatus(qty, threshold);
+
+  const itemWithQty = {
+    ...item,
+    quantity: qty,
+    status
+  };
+
+  return res.status(201).json(serializeItem(itemWithQty));
 }

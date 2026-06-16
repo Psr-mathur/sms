@@ -19,7 +19,7 @@ export async function getBySupplier(req: Request, res: Response) {
   });
   const suppliers = await prisma.supplier.findMany();
 
-  const supplierMap = new Map<number, { totalPurchases: number; totalValue: number; items: Map<number, { itemName: string; totalQuantity: number; totalValue: number }> }>();
+  const supplierMap = new Map<string, { totalPurchases: number; totalValue: number; items: Map<string, { itemName: string; totalQuantity: number; totalValue: number }> }>();
   for (const p of purchases) {
     const existing = supplierMap.get(p.supplierId) ?? { totalPurchases: 0, totalValue: 0, items: new Map() };
     const existingItem = existing.items.get(p.itemId) ?? { itemName: p.item?.name ?? "Unknown", totalQuantity: 0, totalValue: 0 };

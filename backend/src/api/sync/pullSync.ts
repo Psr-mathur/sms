@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../../lib/prisma.js";
 import { SyncPullQueryParams } from "../../models/sync.model.js";
+import { computeStatus } from "../items/items.router.js";
 
 export async function pullSync(req: Request, res: Response) {
   const query = SyncPullQueryParams.safeParse(req.query);
@@ -22,17 +23,22 @@ export async function pullSync(req: Request, res: Response) {
 
   return res.json({
     since: since?.toISOString() ?? null,
-    items: items.map(i => ({
-      id: i.id,
-      name: i.name,
-      description: i.description ?? null,
-      quantity: parseFloat(i.quantity.toString()),
-      unit: i.unit,
-      status: i.status,
-      lowStockThreshold: parseFloat(i.lowStockThreshold.toString()),
-      createdAt: i.createdAt.toISOString(),
-      updatedAt: i.updatedAt.toISOString(),
-    })),
+    items: items.map(i => {
+      const qty = parseFloat(i.currentStock.toString());
+      const status = computeStatus(qty, parseFloat(i.lowStockThreshold.toString()));
+
+      return {
+        id: i.id,
+        name: i.name,
+        description: i.description ?? null,
+        quantity: qty,
+        unit: "units",
+        status: status,
+        lowStockThreshold: parseFloat(i.lowStockThreshold.toString()),
+        createdAt: i.createdAt.toISOString(),
+        updatedAt: i.updatedAt.toISOString(),
+      };
+    }),
     suppliers: suppliers.map(s => ({
       id: s.id,
       name: s.name,

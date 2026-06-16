@@ -19,7 +19,7 @@ export async function getByCustomer(req: Request, res: Response) {
   });
   const customers = await prisma.customer.findMany();
 
-  const customerMap = new Map<number, { totalSales: number; totalValue: number; items: Map<number, { itemName: string; totalQuantity: number; totalValue: number }> }>();
+  const customerMap = new Map<string, { totalSales: number; totalValue: number; items: Map<string, { itemName: string; totalQuantity: number; totalValue: number }> }>();
   for (const s of sales) {
     const existing = customerMap.get(s.customerId) ?? { totalSales: 0, totalValue: 0, items: new Map() };
     const existingItem = existing.items.get(s.itemId) ?? { itemName: s.item?.name ?? "Unknown", totalQuantity: 0, totalValue: 0 };

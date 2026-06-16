@@ -4,7 +4,7 @@ import { GetPurchaseParams } from "../../models/purchases.model.js";
 import { serializePurchase } from "./purchases.router.js";
 
 export async function getPurchase(req: Request, res: Response) {
-  const params = GetPurchaseParams.safeParse({ id: parseInt(String(req.params.id)) });
+  const params = GetPurchaseParams.safeParse({ id: req.params.id });
   if (!params.success) return res.status(400).json({ error: "Invalid id" });
 
   const purchase = await prisma.purchase.findUnique({

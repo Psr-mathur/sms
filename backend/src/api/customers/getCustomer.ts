@@ -4,7 +4,7 @@ import { GetCustomerParams } from "../../models/customers.model.js";
 import { serializeCustomer } from "./customers.router.js";
 
 export async function getCustomer(req: Request, res: Response) {
-  const params = GetCustomerParams.safeParse({ id: parseInt(String(req.params.id)) });
+  const params = GetCustomerParams.safeParse({ id: req.params.id });
   if (!params.success) return res.status(400).json({ error: "Invalid id" });
 
   const customer = await prisma.customer.findUnique({

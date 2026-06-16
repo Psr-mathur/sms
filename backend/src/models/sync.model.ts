@@ -26,16 +26,16 @@ export const SyncPushBody = zod.object({
     "address": zod.string().optional()
   })),
   "purchases": zod.array(zod.object({
-    "itemId": zod.number(),
-    "supplierId": zod.number(),
+    "itemId": zod.string(),
+    "supplierId": zod.string(),
     "quantity": zod.number(),
     "unitPrice": zod.number(),
     "notes": zod.string().optional(),
     "date": zod.coerce.date()
   })),
   "sales": zod.array(zod.object({
-    "itemId": zod.number(),
-    "customerId": zod.number(),
+    "itemId": zod.string(),
+    "customerId": zod.string(),
     "quantity": zod.number(),
     "unitPrice": zod.number(),
     "notes": zod.string().optional(),
@@ -65,7 +65,7 @@ export const SyncPullQueryParams = zod.object({
 export const SyncPullResponse = zod.object({
   "since": zod.string().nullable(),
   "items": zod.array(zod.object({
-    "id": zod.number(),
+    "id": zod.string(),
     "name": zod.string(),
     "description": zod.string().nullish(),
     "quantity": zod.number(),
@@ -76,7 +76,7 @@ export const SyncPullResponse = zod.object({
     "updatedAt": zod.coerce.date()
   })),
   "suppliers": zod.array(zod.object({
-    "id": zod.number(),
+    "id": zod.string(),
     "name": zod.string(),
     "contactName": zod.string().nullish(),
     "phone": zod.string().nullish(),
@@ -85,7 +85,7 @@ export const SyncPullResponse = zod.object({
     "createdAt": zod.coerce.date()
   })),
   "customers": zod.array(zod.object({
-    "id": zod.number(),
+    "id": zod.string(),
     "name": zod.string(),
     "contactName": zod.string().nullish(),
     "phone": zod.string().nullish(),
@@ -94,10 +94,10 @@ export const SyncPullResponse = zod.object({
     "createdAt": zod.coerce.date()
   })),
   "purchases": zod.array(zod.object({
-    "id": zod.number(),
-    "itemId": zod.number(),
+    "id": zod.string(),
+    "itemId": zod.string(),
     "itemName": zod.string(),
-    "supplierId": zod.number(),
+    "supplierId": zod.string(),
     "supplierName": zod.string(),
     "quantity": zod.number(),
     "unitPrice": zod.number(),
@@ -107,10 +107,10 @@ export const SyncPullResponse = zod.object({
     "createdAt": zod.coerce.date()
   })),
   "sales": zod.array(zod.object({
-    "id": zod.number(),
-    "itemId": zod.number(),
+    "id": zod.string(),
+    "itemId": zod.string(),
     "itemName": zod.string(),
-    "customerId": zod.number(),
+    "customerId": zod.string(),
     "customerName": zod.string(),
     "quantity": zod.number(),
     "unitPrice": zod.number(),

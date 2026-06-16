@@ -216,7 +216,7 @@ function ByCustomerReport() {
 
   const customerData = sales
     ? (() => {
-        const map = new Map<number, { name: string; transactions: number; totalQty: number }>();
+        const map = new Map<string, { name: string; transactions: number; totalQty: number }>();
         for (const s of sales) {
           const e = map.get(s.customerId) ?? { name: s.customerName, transactions: 0, totalQty: 0 };
           map.set(s.customerId, { ...e, transactions: e.transactions + 1, totalQty: e.totalQty + s.quantity });
@@ -274,7 +274,7 @@ function BySupplierReport() {
 
   const supplierData = purchases
     ? (() => {
-        const map = new Map<number, { name: string; transactions: number; totalQty: number }>();
+        const map = new Map<string, { name: string; transactions: number; totalQty: number }>();
         for (const p of purchases) {
           const e = map.get(p.supplierId) ?? { name: p.supplierName, transactions: 0, totalQty: 0 };
           map.set(p.supplierId, { ...e, transactions: e.transactions + 1, totalQty: e.totalQty + p.quantity });

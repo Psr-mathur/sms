@@ -14,13 +14,18 @@ export function computeStatus(quantity: number, threshold: number): "in_stock" |
 }
 
 export function serializeItem(item: any) {
+  const quantity = item.currentStock !== undefined 
+    ? parseFloat(item.currentStock.toString()) 
+    : (typeof item.quantity === 'number' ? item.quantity : parseFloat(item.quantity?.toString() ?? '0'));
+  
+  const status = computeStatus(quantity, parseFloat(item.lowStockThreshold.toString()));
+
   return {
     id: item.id,
     name: item.name,
     description: item.description ?? null,
-    quantity: parseFloat(item.quantity.toString()),
-    unit: item.unit,
-    status: item.status,
+    quantity,
+    status,
     lowStockThreshold: parseFloat(item.lowStockThreshold.toString()),
     createdAt: item.createdAt.toISOString(),
     updatedAt: item.updatedAt.toISOString(),

@@ -8,7 +8,7 @@ export const ListCustomersQueryParams = zod.object({
 })
 
 export const ListCustomersResponseItem = zod.object({
-  "id": zod.number(),
+  "id": zod.string(),
   "name": zod.string(),
   "contactName": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -34,11 +34,11 @@ export const CreateCustomerBody = zod.object({
  * @summary Get a customer
  */
 export const GetCustomerParams = zod.object({
-  "id": zod.coerce.number()
+  "id": zod.string().uuid()
 })
 
 export const GetCustomerResponse = zod.object({
-  "id": zod.number(),
+  "id": zod.string(),
   "name": zod.string(),
   "contactName": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -51,7 +51,7 @@ export const GetCustomerResponse = zod.object({
  * @summary Update a customer
  */
 export const UpdateCustomerParams = zod.object({
-  "id": zod.coerce.number()
+  "id": zod.string().uuid()
 })
 
 export const UpdateCustomerBody = zod.object({
@@ -63,7 +63,7 @@ export const UpdateCustomerBody = zod.object({
 })
 
 export const UpdateCustomerResponse = zod.object({
-  "id": zod.number(),
+  "id": zod.string(),
   "name": zod.string(),
   "contactName": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -76,5 +76,5 @@ export const UpdateCustomerResponse = zod.object({
  * @summary Delete a customer
  */
 export const DeleteCustomerParams = zod.object({
-  "id": zod.coerce.number()
+  "id": zod.string().uuid()
 })

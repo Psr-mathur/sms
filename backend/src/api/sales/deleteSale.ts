@@ -4,7 +4,7 @@ import { DeleteSaleParams } from "../../models/sales.model.js";
 import { computeStatus } from "../items/items.router.js";
 
 export async function deleteSale(req: Request, res: Response) {
-  const params = DeleteSaleParams.safeParse({ id: parseInt(String(req.params.id)) });
+  const params = DeleteSaleParams.safeParse({ id: req.params.id });
   if (!params.success) return res.status(400).json({ error: "Invalid id" });
 
   const sale = await prisma.sale.findUnique({
@@ -13,22 +13,12 @@ export async function deleteSale(req: Request, res: Response) {
 
   if (sale) {
     await prisma.$transaction(async (tx) => {
-      const existing = await tx.item.findUnique({
+      await tx.item.update({
         where: { id: sale.itemId },
+        data: {
+          updatedAt: new Date(),
+        },
       });
-      if (existing) {
-        const qty = parseFloat(sale.quantity.toString());
-        const newQty = parseFloat(existing.quantity.toString()) + qty;
-        const threshold = parseFloat(existing.lowStockThreshold.toString());
-        await tx.item.update({
-          where: { id: sale.itemId },
-          data: {
-            quantity: newQty,
-            status: computeStatus(newQty, threshold),
-            updatedAt: new Date(),
-          },
-        });
-      }
       await tx.sale.delete({
         where: { id: params.data.id },
       });

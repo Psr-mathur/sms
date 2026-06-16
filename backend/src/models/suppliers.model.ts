@@ -8,7 +8,7 @@ export const ListSuppliersQueryParams = zod.object({
 })
 
 export const ListSuppliersResponseItem = zod.object({
-  "id": zod.number(),
+  "id": zod.string(),
   "name": zod.string(),
   "contactName": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -34,11 +34,11 @@ export const CreateSupplierBody = zod.object({
  * @summary Get a supplier
  */
 export const GetSupplierParams = zod.object({
-  "id": zod.coerce.number()
+  "id": zod.string().uuid()
 })
 
 export const GetSupplierResponse = zod.object({
-  "id": zod.number(),
+  "id": zod.string(),
   "name": zod.string(),
   "contactName": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -51,7 +51,7 @@ export const GetSupplierResponse = zod.object({
  * @summary Update a supplier
  */
 export const UpdateSupplierParams = zod.object({
-  "id": zod.coerce.number()
+  "id": zod.string().uuid()
 })
 
 export const UpdateSupplierBody = zod.object({
@@ -63,7 +63,7 @@ export const UpdateSupplierBody = zod.object({
 })
 
 export const UpdateSupplierResponse = zod.object({
-  "id": zod.number(),
+  "id": zod.string(),
   "name": zod.string(),
   "contactName": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -76,5 +76,5 @@ export const UpdateSupplierResponse = zod.object({
  * @summary Delete a supplier
  */
 export const DeleteSupplierParams = zod.object({
-  "id": zod.coerce.number()
+  "id": zod.string().uuid()
 })

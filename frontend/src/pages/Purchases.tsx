@@ -10,8 +10,8 @@ import { toast } from "sonner";
 import { AxiosError } from "axios";
 
 const schema = z.object({
-  itemId: z.coerce.number().refine((val) => val !== 0 && !isNaN(val), "Select an item"),
-  supplierId: z.coerce.number().refine((val) => val !== 0 && !isNaN(val), "Select a supplier"),
+  itemId: z.string().min(1, "Select an item"),
+  supplierId: z.string().min(1, "Select a supplier"),
   quantity: z.coerce.number().min(0.01, "Quantity must be greater than 0"),
   date: z.string().min(1, "Date is required"),
   notes: z.string().optional(),
@@ -74,7 +74,7 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
         <form onSubmit={handleSubmit(onSubmit)} className="p-5 space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Item *</label>
-            <select {...register("itemId", { valueAsNumber: true })} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
+            <select {...register("itemId")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
               <option value="">Select item...</option>
               {items?.map((i) => (
                 <option key={i.id} value={i.id}>{i.name} (current: {i.quantity})</option>
@@ -84,7 +84,7 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Supplier *</label>
-            <select {...register("supplierId", { valueAsNumber: true })} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
+            <select {...register("supplierId")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
               <option value="">Select supplier...</option>
               {suppliers?.map((s) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
