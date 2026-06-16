@@ -22,7 +22,7 @@ const navItems = [
   { href: "/sales", label: "Sales", icon: TrendingUp },
   { href: "/suppliers", label: "Suppliers", icon: Truck },
   { href: "/customers", label: "Customers", icon: Users },
-  { href: "/reports", label: "Reports", icon: BarChart3 },
+  // { href: "/reports", label: "Reports", icon: BarChart3 },
 ];
 
 function OnlineIndicator() {
