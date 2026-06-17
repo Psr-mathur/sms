@@ -2,6 +2,7 @@ import AdminJS from "adminjs";
 import AdminJSExpress from "@adminjs/express";
 import { Database, Resource, getModelByName } from "@adminjs/prisma";
 import { prisma } from "../lib/prisma.js";
+import bcrypt from "bcryptjs";
 
 // Register Prisma adapter in AdminJS
 AdminJS.registerAdapter({ Database, Resource });
@@ -59,6 +60,26 @@ const adminJs = new AdminJS({
           password: {
             isVisible: {
               list: false, edit: true, filter: false, show: false
+            }
+          }
+        },
+        actions: {
+          new: {
+            before: async (request) => {
+              if (request.payload?.password) {
+                request.payload.password = await bcrypt.hash(request.payload.password, 10);
+              }
+              return request;
+            }
+          },
+          edit: {
+            before: async (request) => {
+              if (request.payload?.password) {
+                request.payload.password = await bcrypt.hash(request.payload.password, 10);
+              } else {
+                delete request.payload?.password;
+              }
+              return request;
             }
           }
         }
