@@ -11,6 +11,7 @@ import Reports from "@/pages/Reports";
 import NotFound from "@/pages/not-found";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import Login from "@/pages/Login";
+import AndroidAppBackButtonHandler from "@/components/AndroidAppBackButtonHandler";
 
 function Router() {
   return (
@@ -54,6 +55,7 @@ function App() {
   return (
     <AuthProvider>
       <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+        <AndroidAppBackButtonHandler />
         <AppContent />
         <Toaster richColors position="top-right" />
       </WouterRouter>
