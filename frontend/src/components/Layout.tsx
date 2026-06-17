@@ -119,12 +119,16 @@ export default function Layout({ children }: LayoutProps) {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile top bar */}
         <header className="md:hidden flex items-center justify-between px-4 h-12 bg-sidebar text-sidebar-foreground border-b border-sidebar-border">
-          <div className="flex items-center gap-2">
-            <Package className="h-4 w-4 text-amber-400" />
-            <span className="font-bold text-sm">Stock Manager</span>
+          <div className="flex items-center gap-2 min-w-0">
+            <Package className="h-4 w-4 text-amber-400 shrink-0" />
+            <span className="font-bold text-sm truncate">Stock Manager</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 shrink-0">
             <OnlineIndicator />
+            <div className="flex flex-col text-right leading-tight max-w-[80px]">
+              <span className="text-[10px] font-semibold truncate">{user?.name}</span>
+              <span className="text-[8px] text-sidebar-foreground/60 truncate">@{user?.username}</span>
+            </div>
             <button
               onClick={logout}
               className="p-1 hover:bg-sidebar-accent rounded text-sidebar-foreground/75 hover:text-red-400 transition-colors"

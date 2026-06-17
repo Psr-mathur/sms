@@ -9,11 +9,16 @@ import { Plus, X, Search, ShoppingCart, Filter, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 
+const todayStr = new Date().toLocaleDateString("sv-SE");
+
 const schema = z.object({
   itemId: z.string().min(1, "Select an item"),
   supplierId: z.string().min(1, "Select a supplier"),
   quantity: z.coerce.number().min(0.01, "Quantity must be greater than 0"),
-  date: z.string().min(1, "Date is required"),
+  date: z.string().min(1, "Date is required").refine(
+    (val) => val <= todayStr,
+    "Date cannot be in the future"
+  ),
   notes: z.string().optional(),
 });
 type FormData = z.infer<typeof schema>;
@@ -32,7 +37,7 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { date: new Date().toISOString().split("T")[0] },
+    defaultValues: { date: todayStr },
   });
 
   const createMutation = useMutation({
@@ -98,7 +103,7 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Date *</label>
-            <input type="date" {...register("date")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
+            <input type="date" max={todayStr} {...register("date")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
             {errors.date && <p className="text-xs text-destructive mt-1">{errors.date.message}</p>}
           </div>
           <div>
@@ -163,9 +168,9 @@ export default function Purchases() {
         </div>
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
-          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="border border-input rounded-md px-2 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
+          <input type="date" max={todayStr} value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="border border-input rounded-md px-2 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
           <span className="text-muted-foreground text-sm">–</span>
-          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="border border-input rounded-md px-2 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
+          <input type="date" max={todayStr} value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="border border-input rounded-md px-2 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
         </div>
       </div>
 

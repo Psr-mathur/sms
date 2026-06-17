@@ -4,6 +4,8 @@ import { purchasesApi, salesApi } from "@/lib/db";
 import { queryKeys } from "@/lib/queryKeys";
 import { Printer, Loader2 } from "lucide-react";
 
+const todayStr = new Date().toLocaleDateString("sv-SE");
+
 function PrintButton({ label }: { label: string }) {
   return (
     <button
@@ -18,7 +20,7 @@ function PrintButton({ label }: { label: string }) {
 
 /* ─── Daily Tab ─────────────────────────────────────────────────────────── */
 function DailyReport() {
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(todayStr);
 
   const { data: purchases, isLoading: loadingP } = useQuery({
     queryKey: queryKeys.purchases.list({ dateFrom: date, dateTo: date }),
@@ -39,7 +41,7 @@ function DailyReport() {
       <div className="flex flex-wrap items-end gap-3">
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">Date</label>
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
+          <input type="date" max={todayStr} value={date} onChange={(e) => setDate(e.target.value)} className="border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
         </div>
         <PrintButton label="Print Daily Report" />
       </div>
@@ -230,11 +232,11 @@ function ByCustomerReport() {
       <div className="flex flex-wrap items-end gap-3">
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">From</label>
-          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none" />
+          <input type="date" max={todayStr} value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none" />
         </div>
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">To</label>
-          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none" />
+          <input type="date" max={todayStr} value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none" />
         </div>
         <PrintButton label="Print Customer Report" />
       </div>
@@ -288,11 +290,11 @@ function BySupplierReport() {
       <div className="flex flex-wrap items-end gap-3">
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">From</label>
-          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none" />
+          <input type="date" max={todayStr} value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none" />
         </div>
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">To</label>
-          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none" />
+          <input type="date" max={todayStr} value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none" />
         </div>
         <PrintButton label="Print Supplier Report" />
       </div>
