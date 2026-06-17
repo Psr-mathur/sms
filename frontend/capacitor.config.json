@@ -1,5 +1,5 @@
 {
-  "appId": "com.example.sms",
-  "appName": "SMS App",
+  "appId": "com.psr.stockmanager",
+  "appName": "Stock Manager",
   "webDir": "dist/public"
 }

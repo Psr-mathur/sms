@@ -1,4 +1,4 @@
-package com.example.sms;
+package com.psr.stockmanager;
 
 import com.getcapacitor.BridgeActivity;
 

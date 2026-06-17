@@ -123,7 +123,7 @@ Set-Location -Path "$frontendDir\android"
 
 # 10. Copy the resulting APK
 $builtApk = "$frontendDir\android\app\build\outputs\apk\debug\app-debug.apk"
-$targetApk = "$frontendDir\sms-app.apk"
+$targetApk = "$frontendDir\Stock-Manager.apk"
 
 if (Test-Path -Path $builtApk) {
     Copy-Item -Path $builtApk -Destination $targetApk -Force

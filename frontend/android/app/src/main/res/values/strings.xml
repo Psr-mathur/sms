@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">SMS App</string>
-    <string name="title_activity_main">SMS App</string>
-    <string name="package_name">com.example.sms</string>
-    <string name="custom_url_scheme">com.example.sms</string>
+    <string name="app_name">Stock Manager</string>
+    <string name="title_activity_main">Stock Manager</string>
+    <string name="package_name">com.psr.stockmanager</string>
+    <string name="custom_url_scheme">com.psr.stockmanager</string>
 </resources>
