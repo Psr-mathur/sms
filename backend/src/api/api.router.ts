@@ -8,11 +8,15 @@ import { reportsRouter } from "./reports/reports.router.js";
 import { syncRouter } from "./sync/sync.router.js";
 import { healthRouter } from "./health/health.router.js";
 import { authRouter } from "./auth/auth.router.js";
+import { authenticate } from '../middleware/authenticate';
 
 const router = Router();
 
 router.use("/", healthRouter);
 router.use("/auth", authRouter);
+
+router.use(authenticate);
+
 router.use("/items", itemsRouter);
 router.use("/suppliers", suppliersRouter);
 router.use("/customers", customersRouter);

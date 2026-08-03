@@ -53,11 +53,6 @@ app.get("/", (req, res) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/api", (req, res, next) => {
-  if (req.path.startsWith("/auth") || req.path === "/health") {
-    return next();
-  }
-  return authenticate(req, res, next);
-}, router);
+app.use("/api", router);
 
 export default app;
