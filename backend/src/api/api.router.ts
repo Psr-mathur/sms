@@ -8,7 +8,7 @@ import { reportsRouter } from "./reports/reports.router.js";
 import { syncRouter } from "./sync/sync.router.js";
 import { healthRouter } from "./health/health.router.js";
 import { authRouter } from "./auth/auth.router.js";
-import { authenticate } from '../middleware/authenticate';
+import { authenticate } from '../middleware/authenticate.js';
 
 const router = Router();
 
