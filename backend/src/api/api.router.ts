@@ -12,7 +12,7 @@ import { authenticate } from '../middleware/authenticate.js';
 
 const router = Router();
 
-router.use("/", healthRouter);
+router.use("/health", healthRouter);
 router.use("/auth", authRouter);
 
 router.use(authenticate);
