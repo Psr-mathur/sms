@@ -292,12 +292,27 @@ const statusFilters: { value: "all" | ItemStatus; label: string }[] = [
   { value: "out_of_stock", label: "Out of Stock" },
 ];
 
+import { SortableHeader, type SortDirection } from "@/components/ui/sortable-header";
+
+type ItemSortKey = "name" | "quantity" | "lowStockThreshold" | "status";
+
 export default function Items() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Item | undefined>();
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | ItemStatus>("all");
+  const [sortKey, setSortKey] = useState<ItemSortKey>("name");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
+  const handleSort = (key: ItemSortKey) => {
+    if (sortKey === key) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDirection("asc");
+    }
+  };
 
   const { data: items, isLoading, isError } = useQuery({
     queryKey: queryKeys.items.list({
@@ -310,6 +325,20 @@ export default function Items() {
         status: statusFilter !== "all" ? statusFilter : undefined,
       }),
   });
+
+  const sortedItems = items ? [...items].sort((a, b) => {
+    let comparison = 0;
+    if (sortKey === "name") {
+      comparison = a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+    } else if (sortKey === "quantity") {
+      comparison = a.quantity - b.quantity;
+    } else if (sortKey === "lowStockThreshold") {
+      comparison = a.lowStockThreshold - b.lowStockThreshold;
+    } else if (sortKey === "status") {
+      comparison = a.status.localeCompare(b.status);
+    }
+    return sortDirection === "asc" ? comparison : -comparison;
+  }) : [];
 
   return (
     <div className="p-4 md:p-6 space-y-4">
@@ -365,15 +394,15 @@ export default function Items() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Name</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Qty</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Threshold</th>
-                  <th className="px-4 py-2.5 text-center text-xs font-medium text-muted-foreground">Status</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Actions</th>
+                  <SortableHeader label="Name" sortKey="name" currentSortKey={sortKey} sortDirection={sortDirection} onSort={handleSort} align="left" />
+                  <SortableHeader label="Qty" sortKey="quantity" currentSortKey={sortKey} sortDirection={sortDirection} onSort={handleSort} align="right" />
+                  <SortableHeader label="Threshold" sortKey="lowStockThreshold" currentSortKey={sortKey} sortDirection={sortDirection} onSort={handleSort} align="right" />
+                  <SortableHeader label="Status" sortKey="status" currentSortKey={sortKey} sortDirection={sortDirection} onSort={handleSort} align="center" />
+                  <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider select-none">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {items.map((item) => (
+                {sortedItems.map((item) => (
                   <tr
                     key={item.id}
                     onClick={() => setSelectedItem(item)}

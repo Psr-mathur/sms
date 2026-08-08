@@ -68,15 +68,15 @@ export default function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex h-screen overflow-hidden bg-background">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-56 bg-sidebar text-sidebar-foreground border-r border-sidebar-border shrink-0">
-        <div className="flex items-center gap-2 px-4 py-4 border-b border-sidebar-border">
+      <aside className="hidden md:flex flex-col h-full w-56 bg-sidebar text-sidebar-foreground border-r border-sidebar-border shrink-0">
+        <div className="flex items-center gap-2 px-4 py-4 border-b border-sidebar-border shrink-0">
           <Package className="h-5 w-5 text-amber-400" />
           <span className="font-bold text-base tracking-tight">Stock Manager</span>
         </div>
 
-        <nav className="flex-1 px-2 py-3 space-y-0.5">
+        <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
           {navItems.map(({ href, label, icon: Icon }) => {
             const active = location === href;
             return (
@@ -97,7 +97,7 @@ export default function Layout({ children }: LayoutProps) {
           })}
         </nav>
 
-        <div className="px-3 py-3 border-t border-sidebar-border space-y-2.5">
+        <div className="px-3 py-3 border-t border-sidebar-border space-y-2.5 shrink-0">
           <OnlineIndicator />
           <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-sidebar-accent/40 text-sidebar-foreground">
             <div className="min-w-0">
@@ -116,9 +116,9 @@ export default function Layout({ children }: LayoutProps) {
       </aside>
 
       {/* Main area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
         {/* Mobile top bar */}
-        <header className="md:hidden flex items-center justify-between px-4 h-12 bg-sidebar text-sidebar-foreground border-b border-sidebar-border">
+        <header className="md:hidden flex items-center justify-between px-4 h-12 bg-sidebar text-sidebar-foreground border-b border-sidebar-border shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             <Package className="h-4 w-4 text-amber-400 shrink-0" />
             <span className="font-bold text-sm truncate">Stock Manager</span>
@@ -140,7 +140,7 @@ export default function Layout({ children }: LayoutProps) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto pb-20 md:pb-0">
+        <main className="flex-1 overflow-y-auto pb-20 md:pb-6">
           {children}
         </main>
 

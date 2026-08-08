@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { purchasesApi, itemsApi, suppliersApi } from "@/lib/db";
@@ -8,6 +8,8 @@ import { queryKeys } from "@/lib/queryKeys";
 import { Plus, X, Search, ShoppingCart, Filter, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
+import { Autocomplete } from "@/components/ui/autocomplete";
+import { SortableHeader, type SortDirection } from "@/components/ui/sortable-header";
 
 const todayStr = new Date().toLocaleDateString("sv-SE");
 
@@ -35,9 +37,26 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
     queryFn: () => suppliersApi.list(),
   });
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const itemOptions = useMemo(() => {
+    if (!items) return [];
+    return items.map((i) => ({
+      value: i.id,
+      label: i.name,
+      subLabel: `(current: ${i.quantity})`,
+    }));
+  }, [items]);
+
+  const supplierOptions = useMemo(() => {
+    if (!suppliers) return [];
+    return suppliers.map((s) => ({
+      value: s.id,
+      label: s.name,
+    }));
+  }, [suppliers]);
+
+  const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { date: todayStr },
+    defaultValues: { date: todayStr, itemId: "", supplierId: "" },
   });
 
   const createMutation = useMutation({
@@ -78,41 +97,59 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
         <form onSubmit={handleSubmit(onSubmit)} className="p-5 space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Item *</label>
-            <select {...register("itemId")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
-              <option value="">Select item...</option>
-              {items?.map((i) => (
-                <option key={i.id} value={i.id}>{i.name} (current: {i.quantity})</option>
-              ))}
-            </select>
+            <Controller
+              name="itemId"
+              control={control}
+              render={({ field }) => (
+                <Autocomplete
+                  options={itemOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Search item..."
+                  searchPlaceholder="Search items..."
+                  emptyMessage="No items found."
+                  error={!!errors.itemId}
+                />
+              )}
+            />
             {errors.itemId && <p className="text-xs text-destructive mt-1">{errors.itemId.message}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Supplier *</label>
-            <select {...register("supplierId")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
-              <option value="">Select supplier...</option>
-              {suppliers?.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
+            <Controller
+              name="supplierId"
+              control={control}
+              render={({ field }) => (
+                <Autocomplete
+                  options={supplierOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Search supplier..."
+                  searchPlaceholder="Search suppliers..."
+                  emptyMessage="No suppliers found."
+                  error={!!errors.supplierId}
+                />
+              )}
+            />
             {errors.supplierId && <p className="text-xs text-destructive mt-1">{errors.supplierId.message}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Quantity *</label>
-            <input type="number" step="any" min="0" {...register("quantity")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
+            <input type="number" step="any" min="0" {...register("quantity")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring min-h-[42px]" />
             {errors.quantity && <p className="text-xs text-destructive mt-1">{errors.quantity.message}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Date *</label>
-            <input type="date" max={todayStr} {...register("date")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
+            <input type="date" max={todayStr} {...register("date")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring min-h-[42px]" />
             {errors.date && <p className="text-xs text-destructive mt-1">{errors.date.message}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Notes</label>
-            <input {...register("notes")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Optional notes..." />
+            <input {...register("notes")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring min-h-[42px]" placeholder="Optional notes..." />
           </div>
           <div className="flex gap-2 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 border border-border rounded-md py-2 text-sm font-medium hover:bg-muted/50 transition-colors">Cancel</button>
-            <button type="submit" disabled={isBusy} className="flex-1 bg-primary text-primary-foreground rounded-md py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
+            <button type="button" onClick={onClose} className="flex-1 border border-border rounded-md py-2 text-sm font-medium hover:bg-muted/50 transition-colors min-h-[42px]">Cancel</button>
+            <button type="submit" disabled={isBusy} className="flex-1 bg-primary text-primary-foreground rounded-md py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 min-h-[42px]">
               {isBusy ? "Recording..." : "Record Purchase"}
             </button>
           </div>
@@ -122,11 +159,24 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
   );
 }
 
+type PurchaseSortKey = "date" | "itemName" | "supplierName" | "quantity" | "notes";
+
 export default function Purchases() {
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [sortKey, setSortKey] = useState<PurchaseSortKey>("date");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+
+  const handleSort = (key: PurchaseSortKey) => {
+    if (sortKey === key) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDirection(key === "date" ? "desc" : "asc");
+    }
+  };
 
   const { data: purchases, isLoading, isError } = useQuery({
     queryKey: queryKeys.purchases.list({
@@ -140,14 +190,33 @@ export default function Purchases() {
       }),
   });
 
-  const filteredPurchases = purchases
-    ?.slice()
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .filter((p) => {
+  const filteredPurchases = useMemo(() => {
+    if (!purchases) return [];
+    
+    let result = purchases.filter((p) => {
       if (!search) return true;
       const q = search.toLowerCase();
       return p.itemName.toLowerCase().includes(q) || p.supplierName.toLowerCase().includes(q);
     });
+
+    result.sort((a, b) => {
+      let comparison = 0;
+      if (sortKey === "date") {
+        comparison = a.date.localeCompare(b.date);
+      } else if (sortKey === "itemName") {
+        comparison = a.itemName.localeCompare(b.itemName, undefined, { sensitivity: "base" });
+      } else if (sortKey === "supplierName") {
+        comparison = a.supplierName.localeCompare(b.supplierName, undefined, { sensitivity: "base" });
+      } else if (sortKey === "quantity") {
+        comparison = a.quantity - b.quantity;
+      } else if (sortKey === "notes") {
+        comparison = (a.notes || "").localeCompare(b.notes || "", undefined, { sensitivity: "base" });
+      }
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+
+    return result;
+  }, [purchases, search, sortKey, sortDirection]);
 
   return (
     <div className="p-4 md:p-6 space-y-4">
@@ -155,7 +224,7 @@ export default function Purchases() {
         <h1 className="text-xl font-bold">Purchases</h1>
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-2 rounded-md text-sm font-medium hover:opacity-90 transition-opacity"
+          className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-2 rounded-md text-sm font-medium hover:opacity-90 transition-opacity min-h-[40px]"
         >
           <Plus className="h-4 w-4" /> Record Purchase
         </button>
@@ -164,13 +233,13 @@ export default function Purchases() {
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input type="search" placeholder="Search item or supplier..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-9 pr-3 py-2 border border-input rounded-md text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
+          <input type="search" placeholder="Search item or supplier..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-9 pr-3 py-2 border border-input rounded-md text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px]" />
         </div>
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
-          <input type="date" max={todayStr} value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="border border-input rounded-md px-2 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
+          <input type="date" max={todayStr} value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="border border-input rounded-md px-2 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px]" />
           <span className="text-muted-foreground text-sm">–</span>
-          <input type="date" max={todayStr} value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="border border-input rounded-md px-2 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
+          <input type="date" max={todayStr} value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="border border-input rounded-md px-2 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px]" />
         </div>
       </div>
 
@@ -197,11 +266,11 @@ export default function Purchases() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Date</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Item</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Supplier</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Qty</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Notes</th>
+                  <SortableHeader label="Date" sortKey="date" currentSortKey={sortKey} sortDirection={sortDirection} onSort={handleSort} align="left" />
+                  <SortableHeader label="Item" sortKey="itemName" currentSortKey={sortKey} sortDirection={sortDirection} onSort={handleSort} align="left" />
+                  <SortableHeader label="Supplier" sortKey="supplierName" currentSortKey={sortKey} sortDirection={sortDirection} onSort={handleSort} align="left" />
+                  <SortableHeader label="Qty" sortKey="quantity" currentSortKey={sortKey} sortDirection={sortDirection} onSort={handleSort} align="right" />
+                  <SortableHeader label="Notes" sortKey="notes" currentSortKey={sortKey} sortDirection={sortDirection} onSort={handleSort} align="left" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -224,3 +293,4 @@ export default function Purchases() {
     </div>
   );
 }
+
