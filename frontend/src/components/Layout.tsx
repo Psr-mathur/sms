@@ -10,10 +10,12 @@ import {
   Wifi,
   WifiOff,
   LogOut,
+  Settings,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { DateConfigDialog } from "@/components/DateConfigDialog";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -66,14 +68,24 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
+  const [configOpen, setConfigOpen] = useState(false);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col h-full w-56 bg-sidebar text-sidebar-foreground border-r border-sidebar-border shrink-0">
-        <div className="flex items-center gap-2 px-4 py-4 border-b border-sidebar-border shrink-0">
-          <Package className="h-5 w-5 text-amber-400" />
-          <span className="font-bold text-base tracking-tight">Stock Manager</span>
+        <div className="flex items-center justify-between px-4 py-4 border-b border-sidebar-border shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <Package className="h-5 w-5 text-amber-400 shrink-0" />
+            <span className="font-bold text-base tracking-tight truncate">Stock Manager</span>
+          </div>
+          <button
+            onClick={() => setConfigOpen(true)}
+            className="p-1.5 hover:bg-sidebar-accent rounded text-sidebar-foreground/75 hover:text-amber-400 transition-colors shrink-0"
+            title="Date Settings"
+          >
+            <Settings className="h-4 w-4" />
+          </button>
         </div>
 
         <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
@@ -98,7 +110,17 @@ export default function Layout({ children }: LayoutProps) {
         </nav>
 
         <div className="px-3 py-3 border-t border-sidebar-border space-y-2.5 shrink-0">
-          <OnlineIndicator />
+          <div className="flex items-center justify-between gap-1.5">
+            <OnlineIndicator />
+            <button
+              onClick={() => setConfigOpen(true)}
+              className="flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium border border-sidebar-border hover:bg-sidebar-accent text-sidebar-foreground/80 hover:text-amber-400 transition-colors"
+              title="Date Settings"
+            >
+              <Settings className="h-3.5 w-3.5" />
+              <span className="text-[11px]">Forms</span>
+            </button>
+          </div>
           <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-sidebar-accent/40 text-sidebar-foreground">
             <div className="min-w-0">
               <p className="text-xs font-semibold truncate leading-tight">{user?.name}</p>
@@ -123,7 +145,14 @@ export default function Layout({ children }: LayoutProps) {
             <Package className="h-4 w-4 text-amber-400 shrink-0" />
             <span className="font-bold text-sm truncate">Stock Manager</span>
           </div>
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setConfigOpen(true)}
+              className="p-1.5 hover:bg-sidebar-accent rounded text-sidebar-foreground/80 hover:text-amber-400 transition-colors"
+              title="Date Settings"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
             <OnlineIndicator />
             <div className="flex flex-col text-right leading-tight max-w-[80px]">
               <span className="text-[10px] font-semibold truncate">{user?.name}</span>
@@ -165,6 +194,9 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </nav>
       </div>
+
+      <DateConfigDialog open={configOpen} onOpenChange={setConfigOpen} />
     </div>
   );
 }
+

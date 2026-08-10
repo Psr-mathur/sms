@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { Autocomplete } from "@/components/ui/autocomplete";
 import { SortableHeader, type SortDirection } from "@/components/ui/sortable-header";
+import { getPurchaseDefaults, updatePurchaseRetention } from "@/lib/dateSettings";
 
 const todayStr = new Date().toLocaleDateString("sv-SE");
 
@@ -27,6 +28,7 @@ type FormData = z.infer<typeof schema>;
 
 function PurchaseForm({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
+  const purchaseDefaults = getPurchaseDefaults();
 
   const { data: items } = useQuery({
     queryKey: queryKeys.items.all(),
@@ -56,18 +58,24 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
 
   const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { date: todayStr, itemId: "", supplierId: "" },
+    defaultValues: {
+      date: purchaseDefaults.date,
+      itemId: "",
+      supplierId: purchaseDefaults.supplierId,
+    },
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: FormData) =>
-      purchasesApi.create({
+    mutationFn: (data: FormData) => {
+      updatePurchaseRetention({ supplierId: data.supplierId, date: data.date });
+      return purchasesApi.create({
         itemId: data.itemId,
         supplierId: data.supplierId,
         quantity: data.quantity,
         notes: data.notes || undefined,
         date: data.date,
-      }),
+      });
+    },
     onSuccess: (purchase) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.purchases.all() });
       queryClient.invalidateQueries({ queryKey: queryKeys.items.all() });
@@ -123,7 +131,10 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
                 <Autocomplete
                   options={supplierOptions}
                   value={field.value}
-                  onChange={field.onChange}
+                  onChange={(val) => {
+                    field.onChange(val);
+                    updatePurchaseRetention({ supplierId: val });
+                  }}
                   placeholder="Search supplier..."
                   searchPlaceholder="Search suppliers..."
                   emptyMessage="No suppliers found."
@@ -140,7 +151,14 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Date *</label>
-            <input type="date" max={todayStr} {...register("date")} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring min-h-[42px]" />
+            <input
+              type="date"
+              max={todayStr}
+              {...register("date", {
+                onChange: (e) => updatePurchaseRetention({ date: e.target.value }),
+              })}
+              className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring min-h-[42px]"
+            />
             {errors.date && <p className="text-xs text-destructive mt-1">{errors.date.message}</p>}
           </div>
           <div>
