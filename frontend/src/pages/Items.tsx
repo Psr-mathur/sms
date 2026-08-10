@@ -6,12 +6,13 @@ import { z } from "zod";
 import { itemsApi, purchasesApi, salesApi, type Item, type ItemStatus } from "@/lib/db";
 import { queryKeys } from "@/lib/queryKeys";
 import StatusBadge from "@/components/StatusBadge";
-import { Plus, Pencil, X, Search, Loader2, ArrowUpRight, ArrowDownLeft, Calendar, DollarSign, FileText, History } from "lucide-react";
+import { Plus, Pencil, X, Search, Loader2, ArrowUpRight, ArrowDownLeft, Calendar, DollarSign, FileText, History, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
+import { exportItemsToExcel } from "@/lib/excelExport";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -285,6 +286,8 @@ function ItemHistoryDrawer({ item, onClose }: { item: Item; onClose: () => void 
   );
 }
 
+
+
 const statusFilters: { value: "all" | ItemStatus; label: string }[] = [
   { value: "all", label: "All" },
   { value: "in_stock", label: "In Stock" },
@@ -342,14 +345,25 @@ export default function Items() {
 
   return (
     <div className="p-4 md:p-6 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <h1 className="text-xl font-bold">Stock Items</h1>
-        <button
-          onClick={() => { setEditing(undefined); setShowForm(true); }}
-          className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-2 rounded-md text-sm font-medium hover:opacity-90 transition-opacity"
-        >
-          <Plus className="h-4 w-4" /> Add Item
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => exportItemsToExcel(sortedItems)}
+            disabled={!sortedItems.length}
+            className="border border-border bg-card hover:bg-accent hover:text-accent-foreground text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 min-h-[40px] disabled:opacity-50"
+            title="Export items to Excel"
+          >
+            <FileSpreadsheet className="h-4 w-4 text-emerald-600 shrink-0" />
+            <span>Export Excel</span>
+          </button>
+          <button
+            onClick={() => { setEditing(undefined); setShowForm(true); }}
+            className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-2 rounded-md text-sm font-medium hover:opacity-90 transition-opacity min-h-[40px]"
+          >
+            <Plus className="h-4 w-4" /> Add Item
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2">

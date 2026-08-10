@@ -5,14 +5,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { salesApi, itemsApi, customersApi } from "@/lib/db";
 import { queryKeys } from "@/lib/queryKeys";
-import { Plus, X, Search, TrendingUp, Filter, Loader2 } from "lucide-react";
+import { Plus, X, Search, TrendingUp, Filter, Loader2, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { Autocomplete } from "@/components/ui/autocomplete";
 import { SortableHeader, type SortDirection } from "@/components/ui/sortable-header";
 import { getSaleDefaults, updateSaleRetention } from "@/lib/dateSettings";
+import { exportSalesToExcel } from "@/lib/excelExport";
 
 const todayStr = new Date().toLocaleDateString("sv-SE");
+
+const getYesterdayStr = () => {
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  return yesterday.toLocaleDateString("sv-SE");
+};
 
 const schema = z.object({
   itemId: z.string().min(1, "Select an item"),
@@ -184,8 +190,9 @@ type SaleSortKey = "date" | "itemName" | "customerName" | "quantity" | "notes";
 export default function Sales() {
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  // Default to 2-Day Window (Yesterday to Today) for fast page loading
+  const [dateFrom, setDateFrom] = useState(getYesterdayStr());
+  const [dateTo, setDateTo] = useState(todayStr);
   const [sortKey, setSortKey] = useState<SaleSortKey>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
@@ -240,14 +247,25 @@ export default function Sales() {
 
   return (
     <div className="p-4 md:p-6 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <h1 className="text-xl font-bold">Sales</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 bg-emerald-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-emerald-700 transition-colors min-h-[40px]"
-        >
-          <Plus className="h-4 w-4" /> Record Sale
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => exportSalesToExcel(filteredSales)}
+            disabled={!filteredSales.length}
+            className="border border-border bg-card hover:bg-accent hover:text-accent-foreground text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 min-h-[40px] disabled:opacity-50"
+            title="Export visible records to Excel"
+          >
+            <FileSpreadsheet className="h-4 w-4 text-emerald-600 shrink-0" />
+            <span>Export Excel</span>
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-1.5 bg-emerald-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-emerald-700 transition-colors min-h-[40px]"
+          >
+            <Plus className="h-4 w-4" /> Record Sale
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2">
