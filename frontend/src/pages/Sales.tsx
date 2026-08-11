@@ -257,7 +257,7 @@ export default function Sales() {
             title="Export visible records to Excel"
           >
             <FileSpreadsheet className="h-4 w-4 text-emerald-600 shrink-0" />
-            <span>Export Excel</span>
+            <span>Export</span>
           </button>
           <button
             onClick={() => setShowForm(true)}

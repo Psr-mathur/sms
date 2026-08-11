@@ -164,7 +164,7 @@ function ItemHistoryDrawer({ item, onClose }: { item: Item; onClose: () => void 
 
   return (
     <Sheet open={true} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent 
+      <SheetContent
         overlayClassName="top-12 bottom-14 md:top-0 md:bottom-0"
         className="w-full h-[calc(100vh-104px)] top-12 bottom-14 p-0 flex flex-col bg-card border-l border-card-border shadow-2xl md:top-0 md:bottom-0 md:h-full md:w-[500px] md:max-w-[500px]"
       >
@@ -355,7 +355,7 @@ export default function Items() {
             title="Export items to Excel"
           >
             <FileSpreadsheet className="h-4 w-4 text-emerald-600 shrink-0" />
-            <span>Export Excel</span>
+            <span>Export</span>
           </button>
           <button
             onClick={() => { setEditing(undefined); setShowForm(true); }}

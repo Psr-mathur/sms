@@ -217,7 +217,7 @@ export default function Purchases() {
 
   const filteredPurchases = useMemo(() => {
     if (!purchases) return [];
-    
+
     let result = purchases.filter((p) => {
       if (!search) return true;
       const q = search.toLowerCase();
@@ -255,7 +255,7 @@ export default function Purchases() {
             title="Export visible records to Excel"
           >
             <FileSpreadsheet className="h-4 w-4 text-emerald-600 shrink-0" />
-            <span>Export Excel</span>
+            <span>Export</span>
           </button>
           <button
             onClick={() => setShowForm(true)}

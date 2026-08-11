@@ -1,11 +1,43 @@
 import * as XLSX from "xlsx";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
+import { toast } from "sonner";
 import type { Item, Purchase, Sale } from "./db";
 
 function getTodayFilenameStr(): string {
   return new Date().toLocaleDateString("sv-SE");
 }
 
-export function exportItemsToExcel(items: Item[]) {
+async function saveWorkbook(workbook: XLSX.WorkBook, filename: string) {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const base64Data = XLSX.write(workbook, { type: "base64", bookType: "xlsx" });
+
+      const result = await Filesystem.writeFile({
+        path: filename,
+        data: base64Data,
+        directory: Directory.Cache,
+      });
+
+      await Share.share({
+        title: filename,
+        text: `Exported ${filename}`,
+        url: result.uri,
+        dialogTitle: `Save or Share ${filename}`,
+      });
+      toast.success(`Exported ${filename}`);
+    } catch (err: any) {
+      console.error("Native export error:", err);
+      toast.error(err?.message || "Failed to export Excel file on device");
+    }
+  } else {
+    XLSX.writeFile(workbook, filename);
+    toast.success(`Exported ${filename}`);
+  }
+}
+
+export async function exportItemsToExcel(items: Item[]) {
   const data = items.map((item, index) => ({
     "S.No": index + 1,
     "Item Name": item.name,
@@ -29,10 +61,10 @@ export function exportItemsToExcel(items: Item[]) {
   ];
 
   const filename = `Items_${getTodayFilenameStr()}.xlsx`;
-  XLSX.writeFile(workbook, filename);
+  await saveWorkbook(workbook, filename);
 }
 
-export function exportPurchasesToExcel(purchases: Purchase[]) {
+export async function exportPurchasesToExcel(purchases: Purchase[]) {
   const data = purchases.map((p, index) => ({
     "S.No": index + 1,
     "Date": p.date,
@@ -56,10 +88,10 @@ export function exportPurchasesToExcel(purchases: Purchase[]) {
   ];
 
   const filename = `Purchases_${getTodayFilenameStr()}.xlsx`;
-  XLSX.writeFile(workbook, filename);
+  await saveWorkbook(workbook, filename);
 }
 
-export function exportSalesToExcel(sales: Sale[]) {
+export async function exportSalesToExcel(sales: Sale[]) {
   const data = sales.map((s, index) => ({
     "S.No": index + 1,
     "Date": s.date,
@@ -83,5 +115,5 @@ export function exportSalesToExcel(sales: Sale[]) {
   ];
 
   const filename = `Sales_${getTodayFilenameStr()}.xlsx`;
-  XLSX.writeFile(workbook, filename);
+  await saveWorkbook(workbook, filename);
 }
